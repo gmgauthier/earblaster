@@ -43,6 +43,29 @@ const char* state_word(Player::State state)
   }
 }
 
+void add_audio_filter(Gtk::FileChooserDialog& dlg)
+{
+  auto filter = Gtk::FileFilter::create();
+  filter->set_name("Audio");
+  filter->add_mime_type("audio/*");
+  filter->add_pattern("*.mp3");
+  filter->add_pattern("*.ogg");
+  filter->add_pattern("*.oga");
+  filter->add_pattern("*.flac");
+  filter->add_pattern("*.wav");
+  filter->add_pattern("*.m4a");
+  dlg.add_filter(filter);
+}
+
+void add_m3u_filter(Gtk::FileChooserDialog& dlg)
+{
+  auto filter = Gtk::FileFilter::create();
+  filter->set_name("Playlist");
+  filter->add_pattern("*.m3u");
+  filter->add_pattern("*.m3u8");
+  dlg.add_filter(filter);
+}
+
 }  // namespace
 
 MainWindow::MainWindow()
@@ -63,8 +86,9 @@ MainWindow::MainWindow()
       sigc::mem_fun(*this, &MainWindow::on_player_position));
   player_.signal_error().connect(
       sigc::mem_fun(*this, &MainWindow::on_player_error));
-  player_.signal_cover().connect(
-      sigc::mem_fun(well_, &SealView::set_cover));
+  player_.signal_cover().connect(sigc::mem_fun(well_, &SealView::set_cover));
+  player_.signal_eos().connect(sigc::mem_fun(*this, &MainWindow::on_eos));
+  player_.signal_tags().connect(sigc::mem_fun(*this, &MainWindow::on_player_tags));
   player_.set_volume(volume_.get_value());
 
   status_ctx_ = status_.get_context_id("main");
@@ -111,32 +135,25 @@ void MainWindow::build_menu()
   };
 
   auto* file = Gtk::manage(new Gtk::Menu());
-  add_item(*file, "_New File…", sigc::mem_fun(*this, &MainWindow::on_open_file));
-  add_item(*file, "New _Folder…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("New Folder")));
+  add_item(*file, "_New File…", sigc::mem_fun(*this, &MainWindow::on_new_file));
+  add_item(*file, "New _Folder…", sigc::mem_fun(*this, &MainWindow::on_new_folder));
   add_item(*file, "New P_laylist…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("New Playlist")));
+           sigc::mem_fun(*this, &MainWindow::on_new_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
-  add_item(*file, "_Add File…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Add File")));
-  add_item(*file, "Add Fol_der…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Add Folder")));
+  add_item(*file, "_Add File…", sigc::mem_fun(*this, &MainWindow::on_add_file));
+  add_item(*file, "Add Fol_der…", sigc::mem_fun(*this, &MainWindow::on_add_folder));
   add_item(*file, "Add Playlis_t…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Add Playlist")));
+           sigc::mem_fun(*this, &MainWindow::on_add_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "_Save Playlist…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Save Playlist")));
+           sigc::mem_fun(*this, &MainWindow::on_save_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "_Quit", sigc::mem_fun(*this, &MainWindow::on_quit));
   add_menu("_File", *file);
 
   auto* edit = Gtk::manage(new Gtk::Menu());
+  add_item(*edit, "_Remove", sigc::mem_fun(*this, &MainWindow::on_remove_rows));
+  edit->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*edit, "_Preferences…",
            sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
                       Glib::ustring("Preferences")));
@@ -152,6 +169,18 @@ void MainWindow::build_menu()
   add_item(*play, "_Play / Pause",
            sigc::mem_fun(*this, &MainWindow::on_play_pause));
   add_item(*play, "_Stop", sigc::mem_fun(*this, &MainWindow::on_stop));
+  play->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
+  add_item(*play, "P_revious", sigc::mem_fun(*this, &MainWindow::on_prev));
+  add_item(*play, "_Next", sigc::mem_fun(*this, &MainWindow::on_next));
+  play->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
+  shuffle_item_ = Gtk::manage(new Gtk::CheckMenuItem("Sh_uffle"));
+  shuffle_item_->signal_toggled().connect(
+      sigc::mem_fun(*this, &MainWindow::on_shuffle));
+  play->append(*shuffle_item_);
+  repeat_item_ = Gtk::manage(new Gtk::CheckMenuItem("R_epeat"));
+  repeat_item_->signal_toggled().connect(
+      sigc::mem_fun(*this, &MainWindow::on_repeat));
+  play->append(*repeat_item_);
   add_menu("_Play", *play);
 
   auto* tools = Gtk::manage(new Gtk::Menu());
@@ -177,12 +206,12 @@ void MainWindow::build_body()
 
   transport_.set_homogeneous(true);
   transport_.set_margin_top(4);
-  btn_prev_.set_sensitive(false);
-  btn_next_.set_sensitive(false);
   btn_play_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_play));
   btn_pause_.signal_clicked().connect(
       sigc::mem_fun(*this, &MainWindow::on_pause));
   btn_stop_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
+  btn_prev_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_prev));
+  btn_next_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_next));
   transport_.pack_start(btn_prev_);
   transport_.pack_start(btn_play_);
   transport_.pack_start(btn_pause_);
@@ -214,16 +243,40 @@ void MainWindow::build_body()
   left_.set_size_request(260, -1);
   body_.pack_start(left_, Gtk::PACK_SHRINK);
 
-  store_ = Gtk::ListStore::create(columns_);
-  playlist_.set_model(store_);
-  playlist_.append_column("Title", columns_.title);
-  playlist_.append_column("Artist", columns_.artist);
-  playlist_.append_column("Time", columns_.time);
-  playlist_.set_headers_visible(true);
-  playlist_.get_style_context()->add_class("earblaster-playlist");
+  playlist_view_.set_model(playlist_.store());
+  auto add_col = [this](const char* name, const Gtk::TreeModelColumn<Glib::ustring>& model_col,
+                        bool expand, int min_width) {
+    auto* rend = Gtk::manage(new Gtk::CellRendererText());
+    rend->property_ellipsize() = Pango::ELLIPSIZE_END;
+    auto* col = Gtk::manage(new Gtk::TreeViewColumn(name, *rend));
+    col->add_attribute(rend->property_text(), model_col);
+    col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    col->set_resizable(true);
+    col->set_expand(expand);
+    col->set_min_width(min_width);
+    playlist_view_.append_column(*col);
+  };
+  add_col("Title", playlist_.columns().title, true, 80);
+  add_col("Artist", playlist_.columns().artist, true, 60);
+  add_col("Time", playlist_.columns().time, false, 48);
+  playlist_view_.set_fixed_height_mode(true);
+  playlist_view_.set_headers_visible(true);
+  playlist_view_.get_style_context()->add_class("earblaster-playlist");
+  playlist_view_.set_reorderable(true);
+  playlist_view_.get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
+  playlist_view_.signal_row_activated().connect(
+      sigc::mem_fun(*this, &MainWindow::on_row_activated));
+  playlist_view_.signal_key_press_event().connect(
+      sigc::mem_fun(*this, &MainWindow::on_list_key_press), false);
 
-  list_scroll_.add(playlist_);
-  list_scroll_.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+  std::vector<Gtk::TargetEntry> targets = {
+      Gtk::TargetEntry("text/uri-list", Gtk::TargetFlags(0), 0)};
+  playlist_view_.drag_dest_set(targets, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_COPY);
+  playlist_view_.signal_drag_data_received().connect(
+      sigc::mem_fun(*this, &MainWindow::on_drag_data_received));
+
+  list_scroll_.add(playlist_view_);
+  list_scroll_.set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_AUTOMATIC);
   list_scroll_.set_shadow_type(Gtk::SHADOW_IN);
   list_scroll_.set_hexpand(true);
   list_scroll_.set_vexpand(true);
@@ -239,28 +292,174 @@ void MainWindow::set_status(const Glib::ustring& text)
   status_.push(text, status_ctx_);
 }
 
-void MainWindow::on_open_file()
+std::vector<std::string> MainWindow::choose_audio_files()
 {
-  Gtk::FileChooserDialog dlg(*this, "New File", Gtk::FILE_CHOOSER_ACTION_OPEN);
+  Gtk::FileChooserDialog dlg(*this, "Select Audio", Gtk::FILE_CHOOSER_ACTION_OPEN);
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
-  auto filter = Gtk::FileFilter::create();
-  filter->set_name("Audio");
-  filter->add_mime_type("audio/*");
-  filter->add_pattern("*.mp3");
-  filter->add_pattern("*.ogg");
-  filter->add_pattern("*.oga");
-  filter->add_pattern("*.flac");
-  filter->add_pattern("*.wav");
-  filter->add_pattern("*.m4a");
-  dlg.add_filter(filter);
+  dlg.set_select_multiple(true);
+  add_audio_filter(dlg);
   dlg.set_current_folder(std::string(SOURCE_ROOT) + "/data/samples");
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
+    return {};
+  return dlg.get_filenames();
+}
+
+std::string MainWindow::choose_folder(const Glib::ustring& title)
+{
+  Gtk::FileChooserDialog dlg(*this, title, Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+  dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
+  dlg.set_current_folder(std::string(SOURCE_ROOT) + "/data/samples");
+  if (dlg.run() != Gtk::RESPONSE_ACCEPT)
+    return {};
+  return dlg.get_filename();
+}
+
+std::string MainWindow::choose_m3u(bool save)
+{
+  Gtk::FileChooserDialog dlg(*this, save ? "Save Playlist" : "Select Playlist",
+                             save ? Gtk::FILE_CHOOSER_ACTION_SAVE
+                                  : Gtk::FILE_CHOOSER_ACTION_OPEN);
+  dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+  dlg.add_button(save ? "_Save" : "_Open", Gtk::RESPONSE_ACCEPT);
+  add_m3u_filter(dlg);
+  if (save)
+    dlg.set_do_overwrite_confirmation(true);
+  if (dlg.run() != Gtk::RESPONSE_ACCEPT)
+    return {};
+  return dlg.get_filename();
+}
+
+void MainWindow::play_current()
+{
+  const std::string uri = playlist_.current_uri();
+  if (uri.empty())
     return;
-  if (!player_.open(dlg.get_filename()))
+  if (!player_.open(uri))
     return;
   well_.stop();
   player_.play();
+  select_current_row();
+}
+
+void MainWindow::select_current_row()
+{
+  const auto path = playlist_.current_path();
+  if (path.empty())
+    return;
+  auto sel = playlist_view_.get_selection();
+  sel->unselect_all();
+  sel->select(path);
+  playlist_view_.scroll_to_row(path);
+}
+
+void MainWindow::on_new_file()
+{
+  const auto files = choose_audio_files();
+  if (files.empty())
+    return;
+  playlist_.clear();
+  if (playlist_.add_files(files) <= 0) {
+    set_status("No audio files in that selection.");
+    sync_transport();
+    return;
+  }
+  playlist_.set_current(0);
+  play_current();
+}
+
+void MainWindow::on_add_file()
+{
+  const auto files = choose_audio_files();
+  if (files.empty())
+    return;
+  const int n = playlist_.add_files(files);
+  if (n <= 0)
+    set_status("No audio files in that selection.");
+  sync_transport();
+}
+
+void MainWindow::on_new_folder()
+{
+  const auto dir = choose_folder("New Folder");
+  if (dir.empty())
+    return;
+  playlist_.clear();
+  if (playlist_.add_folder(dir) <= 0) {
+    set_status("No audio files in that folder.");
+    sync_transport();
+    return;
+  }
+  playlist_.set_current(0);
+  play_current();
+}
+
+void MainWindow::on_add_folder()
+{
+  const auto dir = choose_folder("Add Folder");
+  if (dir.empty())
+    return;
+  if (playlist_.add_folder(dir) <= 0)
+    set_status("No audio files in that folder.");
+  sync_transport();
+}
+
+void MainWindow::on_new_playlist()
+{
+  const auto path = choose_m3u(false);
+  if (path.empty())
+    return;
+  playlist_.clear();
+  if (playlist_.add_m3u(path) <= 0) {
+    set_status("Playlist had no playable audio.");
+    sync_transport();
+    return;
+  }
+  playlist_.set_current(0);
+  play_current();
+}
+
+void MainWindow::on_add_playlist()
+{
+  const auto path = choose_m3u(false);
+  if (path.empty())
+    return;
+  if (playlist_.add_m3u(path) <= 0)
+    set_status("Playlist had no playable audio.");
+  sync_transport();
+}
+
+void MainWindow::on_save_playlist()
+{
+  if (playlist_.empty()) {
+    set_status("Playlist is empty.");
+    return;
+  }
+  auto path = choose_m3u(true);
+  if (path.empty())
+    return;
+  if (Playlist::is_m3u_path(path) == false)
+    path += ".m3u";
+  if (!playlist_.save_m3u(path))
+    set_status("Could not save playlist.");
+}
+
+void MainWindow::on_remove_rows()
+{
+  const auto rows = playlist_view_.get_selection()->get_selected_rows();
+  if (rows.empty())
+    return;
+  const bool killed = playlist_.remove_paths(rows);
+  if (killed) {
+    if (playlist_.next())
+      play_current();
+    else {
+      player_.stop();
+      well_.stop();
+    }
+  }
+  sync_transport();
 }
 
 void MainWindow::on_quit()
@@ -276,12 +475,18 @@ void MainWindow::on_about()
 
 void MainWindow::on_play()
 {
-  if (!player_.loaded()) {
-    on_open_file();
+  if (playlist_.empty()) {
+    on_new_file();
     return;
   }
   if (player_.state() == Player::State::Playing)
     return;
+  if (!player_.loaded() || playlist_.current_uri().empty()) {
+    if (playlist_.current_index() < 0)
+      playlist_.set_current(0);
+    play_current();
+    return;
+  }
   player_.play();
 }
 
@@ -304,14 +509,65 @@ void MainWindow::on_play_pause()
     on_play();
 }
 
+void MainWindow::on_prev()
+{
+  if (!playlist_.prev())
+    return;
+  play_current();
+}
+
+void MainWindow::on_next()
+{
+  if (!playlist_.next())
+    return;
+  play_current();
+}
+
+void MainWindow::on_shuffle()
+{
+  playlist_.set_shuffle(shuffle_item_ && shuffle_item_->get_active());
+}
+
+void MainWindow::on_repeat()
+{
+  playlist_.set_repeat((repeat_item_ && repeat_item_->get_active())
+                           ? Playlist::Repeat::All
+                           : Playlist::Repeat::Off);
+}
+
+void MainWindow::on_row_activated(const Gtk::TreeModel::Path& path,
+                                  Gtk::TreeViewColumn*)
+{
+  playlist_.set_current(path);
+  play_current();
+}
+
+void MainWindow::on_eos()
+{
+  if (playlist_.repeat() == Playlist::Repeat::One) {
+    player_.seek(0);
+    player_.play();
+    return;
+  }
+  if (playlist_.next()) {
+    play_current();
+    return;
+  }
+  player_.stop();
+  well_.stop();
+}
+
 void MainWindow::sync_transport()
 {
   const auto state = player_.state();
   const bool playing = state == Player::State::Playing;
   const bool stopped = state == Player::State::Stopped;
+  const bool has_list = !playlist_.empty();
   btn_play_.set_sensitive(!playing);
   btn_pause_.set_sensitive(playing);
   btn_stop_.set_sensitive(!stopped);
+  btn_prev_.set_sensitive(has_list);
+  btn_next_.set_sensitive(has_list);
   seek_.set_sensitive(player_.duration() > 0);
   update_clock();
 }
@@ -340,12 +596,18 @@ void MainWindow::on_player_position(gint64 position, gint64 duration)
     seek_.set_value(static_cast<double>(position) / static_cast<double>(duration));
   }
   seek_.set_sensitive(duration > 0);
+  playlist_.update_current_meta("", "", duration);
   update_clock();
 }
 
 void MainWindow::on_player_error(const Glib::ustring& message)
 {
   set_status("Error — " + message);
+}
+
+void MainWindow::on_player_tags(const Glib::ustring& title, const Glib::ustring& artist)
+{
+  playlist_.update_current_meta(title, artist, 0);
 }
 
 bool MainWindow::on_seek_press(GdkEventButton*)
@@ -368,9 +630,29 @@ void MainWindow::on_volume_changed()
   player_.set_volume(volume_.get_value());
 }
 
+void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx,
+                                       int, int, const Gtk::SelectionData& data,
+                                       guint, guint time)
+{
+  const int n = playlist_.add_dropped(data.get_uris());
+  ctx->drag_finish(n > 0, false, time);
+  if (n <= 0)
+    set_status("Nothing playable in that drop.");
+  sync_transport();
+}
+
+bool MainWindow::on_list_key_press(GdkEventKey* event)
+{
+  if (event->keyval == GDK_KEY_Delete || event->keyval == GDK_KEY_KP_Delete) {
+    on_remove_rows();
+    return true;
+  }
+  return false;
+}
+
 void MainWindow::on_not_yet(const Glib::ustring& feature)
 {
-  set_status(feature + " arrives after M2.");
+  set_status(feature + " arrives after M3.");
 }
 
 }  // namespace earblaster

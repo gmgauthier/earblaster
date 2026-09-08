@@ -9,14 +9,14 @@ Repo: https://github.com/gmgauthier/earblaster
 
 ## Status (2026-09-08)
 
-**M2 is in the tree.** `Player` wraps `playbin`. Compiled on Debian 13.
+**M3 is in the tree.** Playlist uses **New** vs **Add**. Compiled on Debian 13.
 
-- New File… plays MP3 / Ogg / FLAC / WAV / M4A (M3 will add Add File… and folders)
-- Play / Pause / Stop, seek, volume, status `mm:ss / mm:ss`
-- Bead follows GStreamer state; `GST_TAG_IMAGE` feeds `SealView::set_cover`
-- Audio only (`video-sink` = fakesink). Playlist still empty
+- New File/Folder/Playlist replaces the list and plays the first row
+- Add File/Folder/Playlist and drag-drop append; transport stays put
+- Prev/Next, EOS → next, Shuffle, Repeat (all). Edit → Remove / Delete
+- Double-click plays that row. Save Playlist writes M3U
 
-Next: **M3 — Playlist.**
+Next: **M4 — Cover** (TagLib + sidecars; well already stretch-fills `GST_TAG_IMAGE`).
 
 ## 1. Locked decisions
 
@@ -133,7 +133,7 @@ Two verbs, used everywhere (File menu, drag-drop). “Play” on the transport a
 | **Add** File / Folder / Playlist | append | unchanged (keep playing, paused, or stopped) |
 
 - **New File…** — multi-select; audio only; filename order; one file is a one-row list
-- **New Folder…** — that directory only (not recursive); audio only; filename order; play first
+- **New Folder…** — selected folder plus **one** level of subfolders (artist → albums). Audio only; filename order; play first. Skip hidden (`.`-prefixed) names.
 - **Add File…** / **Add Folder…** — same scan rules, append
 - Drag files or `.m3u` onto the pane = **Add**
 - Double-click a row = play that row (list unchanged)
@@ -193,9 +193,9 @@ Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns 
 
 `Player` + Open File. Transport wired. Seek and volume. Status bar `mm:ss / mm:ss`. Audio formats via playbin (MP3, Ogg, FLAC, WAV at minimum). No video. Embedded cover via `GST_TAG_IMAGE` after one bead lap.
 
-### M3 — Playlist (week 2)
+### M3 — Playlist — **done 2026-09-08**
 
-ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave transport). New/Add File (multi-select), New/Add Folder (non-recursive), M3U New/Add/Save. Drag-drop is Add. Double-click plays that row. Prev/Next, EOS → next, shuffle, repeat. Relabel M2 “Open File…” to “New File…”.
+ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave transport). New/Add File (multi-select), New/Add Folder (recursive), M3U New/Add/Save. Drag-drop is Add. Double-click plays that row. Prev/Next, EOS → next, shuffle, repeat. Relabel M2 “Open File…” to “New File…”.
 
 ### M4 — Cover (week 2)
 
@@ -274,6 +274,6 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 ## 9. First code to write
 
-M0–M2 are in the tree. Sound is playbin.
+M0–M3 are in the tree.
 
-Next code is M3: playlist ListStore, add files/folder, remove, drag reorder, M3U, EOS → next, shuffle, repeat.
+Next code is M4: `CoverArt` with TagLib and sidecar `folder.jpg` / `cover.jpg`, feeding `SealView::set_cover` (stretch after one bead lap).

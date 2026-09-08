@@ -217,6 +217,17 @@ void Player::handle_tags(GstTagList* tags)
   auto pix = pixbuf_from_tags(tags);
   if (pix)
     signal_cover_.emit(pix);
+
+  gchar* title = nullptr;
+  gchar* artist = nullptr;
+  gst_tag_list_get_string(tags, GST_TAG_TITLE, &title);
+  gst_tag_list_get_string(tags, GST_TAG_ARTIST, &artist);
+  if (title || artist) {
+    signal_tags_.emit(title ? Glib::ustring(title) : Glib::ustring(),
+                      artist ? Glib::ustring(artist) : Glib::ustring());
+  }
+  g_free(title);
+  g_free(artist);
 }
 
 gboolean Player::on_bus(GstBus*, GstMessage* msg, gpointer self)
@@ -240,7 +251,6 @@ gboolean Player::on_bus(GstBus*, GstMessage* msg, gpointer self)
     }
     case GST_MESSAGE_EOS:
       p->signal_eos_.emit();
-      p->stop();
       break;
     case GST_MESSAGE_ERROR: {
       GError* err = nullptr;

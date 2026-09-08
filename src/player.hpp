@@ -45,6 +45,10 @@ class Player {
   {
     return signal_cover_;
   }
+  sigc::signal<void, Glib::ustring, Glib::ustring>& signal_tags()
+  {
+    return signal_tags_;
+  }
 
  private:
   static gboolean on_bus(GstBus* bus, GstMessage* msg, gpointer self);
@@ -70,6 +74,7 @@ class Player {
   sigc::signal<void> signal_eos_;
   sigc::signal<void, Glib::ustring> signal_error_;
   sigc::signal<void, Glib::RefPtr<Gdk::Pixbuf>> signal_cover_;
+  sigc::signal<void, Glib::ustring, Glib::ustring> signal_tags_;
 };
 
 }  // namespace earblaster

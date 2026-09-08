@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M2 done** (2026-09-08): New File… plays audio through `playbin`. Transport, seek, volume, `mm:ss / mm:ss`. Bead follows playback; embedded cover stretch-fills after one lap. Next is M3 (playlist: New vs Add).
+**M3 done** (2026-09-08): New vs Add playlist. Multi-select files, folders, M3U, drag-drop append, Prev/Next, EOS, shuffle/repeat. Next is M4 (TagLib cover).
 
 | File | What |
 |---|---|
