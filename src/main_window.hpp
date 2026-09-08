@@ -4,6 +4,7 @@
 
 #include "cover_art.hpp"
 #include "eq_window.hpp"
+#include "prefs_window.hpp"
 #include "player.hpp"
 #include "playlist.hpp"
 #include "seal_view.hpp"
@@ -37,6 +38,8 @@ class MainWindow : public Gtk::Window {
   void on_quit();
   void on_about();
   void on_equalizer();
+  void on_preferences();
+  std::string chooser_start_dir() const;
   void persist();
   bool on_key_press(GdkEventKey* event);
   void seek_relative(int seconds);

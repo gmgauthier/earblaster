@@ -43,6 +43,7 @@ executable(
   'src/cover_art.cpp',
   'src/settings.cpp',
   'src/eq_window.cpp',
+  'src/prefs_window.cpp',
   include_directories: inc,
   dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
   install: true,

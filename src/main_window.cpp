@@ -3,7 +3,9 @@
 #include "main_window.hpp"
 #include "about_dialog.hpp"
 #include "paths.hpp"
-#include "config.hpp"
+
+#include <glibmm/fileutils.h>
+#include <glibmm/miscutils.h>
 
 #include <cstdio>
 #include <iostream>
@@ -116,10 +118,12 @@ MainWindow::MainWindow()
   add(root_);
   show_all();
 
-  if (settings_.window_w > 0 && settings_.window_h > 0)
-    resize(settings_.window_w, settings_.window_h);
-  if (settings_.window_x >= 0 && settings_.window_y >= 0)
-    move(settings_.window_x, settings_.window_y);
+  if (settings_.restore_window) {
+    if (settings_.window_w > 0 && settings_.window_h > 0)
+      resize(settings_.window_w, settings_.window_h);
+    if (settings_.window_x >= 0 && settings_.window_y >= 0)
+      move(settings_.window_x, settings_.window_y);
+  }
 }
 
 void MainWindow::load_css()
@@ -179,8 +183,7 @@ void MainWindow::build_menu()
   add_item(*edit, "_Remove", sigc::mem_fun(*this, &MainWindow::on_remove_rows));
   edit->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*edit, "_Preferences…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Preferences")));
+           sigc::mem_fun(*this, &MainWindow::on_preferences));
   add_menu("_Edit", *edit);
 
   auto* view = Gtk::manage(new Gtk::Menu());
@@ -312,6 +315,18 @@ void MainWindow::set_status(const Glib::ustring& text)
   status_.push(text, status_ctx_);
 }
 
+std::string MainWindow::chooser_start_dir() const
+{
+  if (!settings_.music_dir.empty() &&
+      Glib::file_test(settings_.music_dir, Glib::FILE_TEST_IS_DIR))
+    return settings_.music_dir;
+  const std::string home_music =
+      Glib::build_filename(Glib::get_home_dir(), "Music");
+  if (Glib::file_test(home_music, Glib::FILE_TEST_IS_DIR))
+    return home_music;
+  return Glib::get_home_dir();
+}
+
 std::vector<std::string> MainWindow::choose_audio_files()
 {
   Gtk::FileChooserDialog dlg(*this, "Select Audio", Gtk::FILE_CHOOSER_ACTION_OPEN);
@@ -319,10 +334,13 @@ std::vector<std::string> MainWindow::choose_audio_files()
   dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
   dlg.set_select_multiple(true);
   add_audio_filter(dlg);
-  dlg.set_current_folder(std::string(SOURCE_ROOT) + "/data/samples");
+  dlg.set_current_folder(chooser_start_dir());
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return {};
-  return dlg.get_filenames();
+  auto files = dlg.get_filenames();
+  if (!files.empty())
+    settings_.music_dir = Glib::path_get_dirname(files.front());
+  return files;
 }
 
 std::string MainWindow::choose_folder(const Glib::ustring& title)
@@ -330,10 +348,13 @@ std::string MainWindow::choose_folder(const Glib::ustring& title)
   Gtk::FileChooserDialog dlg(*this, title, Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
-  dlg.set_current_folder(std::string(SOURCE_ROOT) + "/data/samples");
+  dlg.set_current_folder(chooser_start_dir());
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return {};
-  return dlg.get_filename();
+  const std::string dir = dlg.get_filename();
+  if (!dir.empty())
+    settings_.music_dir = dir;
+  return dir;
 }
 
 std::string MainWindow::choose_m3u(bool save)
@@ -344,11 +365,15 @@ std::string MainWindow::choose_m3u(bool save)
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button(save ? "_Save" : "_Open", Gtk::RESPONSE_ACCEPT);
   add_m3u_filter(dlg);
+  dlg.set_current_folder(chooser_start_dir());
   if (save)
     dlg.set_do_overwrite_confirmation(true);
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return {};
-  return dlg.get_filename();
+  const std::string path = dlg.get_filename();
+  if (!path.empty())
+    settings_.music_dir = Glib::path_get_dirname(path);
+  return path;
 }
 
 void MainWindow::play_current()
@@ -670,6 +695,19 @@ void MainWindow::on_equalizer()
     eq_win_->set_transient_for(*this);
   }
   eq_win_->present();
+}
+
+void MainWindow::on_preferences()
+{
+  PrefsWindow dlg(*this, settings_);
+  if (dlg.run() != Gtk::RESPONSE_OK)
+    return;
+  dlg.apply();
+  if (shuffle_item_)
+    shuffle_item_->set_active(settings_.shuffle);
+  if (repeat_item_)
+    repeat_item_->set_active(settings_.repeat);
+  persist();
 }
 
 void MainWindow::persist()

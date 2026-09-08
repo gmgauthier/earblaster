@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace earblaster {
 
 struct Settings {
@@ -14,6 +16,8 @@ struct Settings {
   double volume = 0.8;
   bool shuffle = false;
   bool repeat = false;
+  bool restore_window = true;
+  std::string music_dir;
   double eq[kEqBands] = {};
 
   void load();

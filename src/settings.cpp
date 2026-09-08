@@ -64,6 +64,12 @@ void Settings::load()
   volume = get_dbl("player", "volume", volume);
   shuffle = get_bool("player", "shuffle", shuffle);
   repeat = get_bool("player", "repeat", repeat);
+  restore_window = get_bool("window", "restore", restore_window);
+  try {
+    if (kf.has_key("player", "music_dir"))
+      music_dir = kf.get_string("player", "music_dir");
+  } catch (const Glib::Error&) {
+  }
   for (int i = 0; i < kEqBands; ++i) {
     char key[16];
     std::snprintf(key, sizeof(key), "band%d", i);
@@ -82,6 +88,8 @@ void Settings::save() const
   kf.set_double("player", "volume", volume);
   kf.set_boolean("player", "shuffle", shuffle);
   kf.set_boolean("player", "repeat", repeat);
+  kf.set_boolean("window", "restore", restore_window);
+  kf.set_string("player", "music_dir", music_dir);
   for (int i = 0; i < kEqBands; ++i) {
     char key[16];
     std::snprintf(key, sizeof(key), "band%d", i);
