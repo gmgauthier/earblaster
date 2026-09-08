@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-Design and planning. No playback code yet.
+M0 scaffold is in the tree: Meson + gtkmm-3 window, static `SealView`, menus, empty playlist. No GStreamer yet.
 
 | File | What |
 |---|---|
@@ -53,6 +53,17 @@ About box line, when we get there:
 
 LCOS (Devuan + XLibre + XFCE4). Build on any current Devuan/Debian box; ship as a `.deb` under the LCOS package layout.
 
+## Build
+
+```
+sudo apt install build-essential meson ninja-build pkg-config g++ libgtkmm-3.0-dev
+meson setup build
+meson compile -C build
+./build/earblaster
+```
+
+GStreamer and TagLib are not required until M2 / M4.
+
 ## License
 
-To be decided with the first compilable tree. Until then, treat the marks and documents in this repository as project working files.
+[The Unlicense](https://unlicense.org). Public domain. See [UNLICENSE](UNLICENSE).

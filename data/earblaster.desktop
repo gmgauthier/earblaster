@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=EarBlaster
+Comment=A media player for The Lunduke Computer Operating System
+Exec=earblaster
+Icon=earblaster
+Terminal=false
+Hidden=false
+Categories=GTK;AudioVideo;Player;Audio;Video;
+StartupWMClass=earblaster
+StartupNotify=true

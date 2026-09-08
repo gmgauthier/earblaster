@@ -1,0 +1,32 @@
+/* EarBlaster lcos skin — GTK3 CSS.
+ * Decorations stay with Clearlooks / Phenix. We only tint the client.
+ */
+
+window.earblaster-window {
+  background-color: #E6E6E1;
+}
+
+.earblaster-well {
+  background-color: #0B1D38;
+}
+
+.earblaster-playlist {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+.earblaster-playlist:selected,
+.earblaster-playlist:selected:focus {
+  background-color: #5E84B0;
+  color: #FFFFFF;
+}
+
+treeview header button {
+  background-image: none;
+  background-color: #D4D0C8;
+  color: #000000;
+}
+
+statusbar {
+  background-color: #D4D0C8;
+}
