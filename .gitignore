@@ -1,0 +1,8 @@
+build/
+builddir/
+.cache/
+*.o
+*~
+*.swp
+.idea/
+.vscode/
