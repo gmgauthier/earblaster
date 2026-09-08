@@ -5,6 +5,7 @@
 #include "paths.hpp"
 #include "config.hpp"
 
+#include <cstdio>
 #include <iostream>
 
 namespace earblaster {
@@ -17,6 +18,29 @@ Gtk::MenuItem* add_item(Gtk::Menu& menu, const Glib::ustring& label,
   item->signal_activate().connect(slot);
   menu.append(*item);
   return item;
+}
+
+Glib::ustring format_clock(gint64 ns)
+{
+  if (ns < 0)
+    ns = 0;
+  const int total = static_cast<int>(ns / GST_SECOND);
+  char buf[32];
+  std::snprintf(buf, sizeof(buf), "%d:%02d", total / 60, total % 60);
+  return buf;
+}
+
+const char* state_word(Player::State state)
+{
+  switch (state) {
+    case Player::State::Playing:
+      return "Playing";
+    case Player::State::Paused:
+      return "Paused";
+    case Player::State::Stopped:
+    default:
+      return "Stopped";
+  }
 }
 
 }  // namespace
@@ -32,6 +56,16 @@ MainWindow::MainWindow()
   load_window_icon();
   build_menu();
   build_body();
+
+  player_.signal_state_changed().connect(
+      sigc::mem_fun(*this, &MainWindow::on_player_state));
+  player_.signal_position_changed().connect(
+      sigc::mem_fun(*this, &MainWindow::on_player_position));
+  player_.signal_error().connect(
+      sigc::mem_fun(*this, &MainWindow::on_player_error));
+  player_.signal_cover().connect(
+      sigc::mem_fun(well_, &SealView::set_cover));
+  player_.set_volume(volume_.get_value());
 
   status_ctx_ = status_.get_context_id("main");
   sync_transport();
@@ -144,6 +178,10 @@ void MainWindow::build_body()
   seek_.set_draw_value(false);
   seek_.set_sensitive(false);
   seek_.set_margin_top(6);
+  seek_.signal_button_press_event().connect(
+      sigc::mem_fun(*this, &MainWindow::on_seek_press), false);
+  seek_.signal_button_release_event().connect(
+      sigc::mem_fun(*this, &MainWindow::on_seek_release), false);
   left_.pack_start(seek_label_, Gtk::PACK_SHRINK);
   left_.pack_start(seek_, Gtk::PACK_SHRINK);
 
@@ -151,6 +189,8 @@ void MainWindow::build_body()
   volume_.set_value(0.8);
   volume_.set_draw_value(false);
   volume_.set_margin_top(6);
+  volume_.signal_value_changed().connect(
+      sigc::mem_fun(*this, &MainWindow::on_volume_changed));
   left_.pack_start(volume_label_, Gtk::PACK_SHRINK);
   left_.pack_start(volume_, Gtk::PACK_SHRINK);
 
@@ -197,9 +237,13 @@ void MainWindow::on_open_file()
   filter->add_pattern("*.wav");
   filter->add_pattern("*.m4a");
   dlg.add_filter(filter);
+  dlg.set_current_folder(std::string(SOURCE_ROOT) + "/data/samples");
   if (dlg.run() != Gtk::RESPONSE_ACCEPT)
     return;
-  set_status("M2 will play: " + dlg.get_filename());
+  if (!player_.open(dlg.get_filename()))
+    return;
+  well_.stop();
+  player_.play();
 }
 
 void MainWindow::on_quit()
@@ -215,34 +259,29 @@ void MainWindow::on_about()
 
 void MainWindow::on_play()
 {
-  if (dummy_ == DummyState::Playing)
+  if (!player_.loaded()) {
+    on_open_file();
     return;
-  dummy_ = DummyState::Playing;
-  well_.set_playing(true);
-  sync_transport();
+  }
+  if (player_.state() == Player::State::Playing)
+    return;
+  player_.play();
 }
 
 void MainWindow::on_pause()
 {
-  if (dummy_ != DummyState::Playing)
-    return;
-  dummy_ = DummyState::Paused;
-  well_.set_playing(false);
-  sync_transport();
+  player_.pause();
 }
 
 void MainWindow::on_stop()
 {
-  if (dummy_ == DummyState::Stopped)
-    return;
-  dummy_ = DummyState::Stopped;
+  player_.stop();
   well_.stop();
-  sync_transport();
 }
 
 void MainWindow::on_play_pause()
 {
-  if (dummy_ == DummyState::Playing)
+  if (player_.state() == Player::State::Playing)
     on_pause();
   else
     on_play();
@@ -250,22 +289,71 @@ void MainWindow::on_play_pause()
 
 void MainWindow::sync_transport()
 {
-  const bool playing = dummy_ == DummyState::Playing;
-  const bool stopped = dummy_ == DummyState::Stopped;
+  const auto state = player_.state();
+  const bool playing = state == Player::State::Playing;
+  const bool stopped = state == Player::State::Stopped;
   btn_play_.set_sensitive(!playing);
   btn_pause_.set_sensitive(playing);
   btn_stop_.set_sensitive(!stopped);
-  if (stopped)
-    set_status("Stopped — 0:00 / 0:00");
-  else if (playing)
-    set_status("Playing — 0:00 / 0:00");
+  seek_.set_sensitive(player_.duration() > 0);
+  update_clock();
+}
+
+void MainWindow::update_clock()
+{
+  set_status(Glib::ustring(state_word(player_.state())) + " — " +
+             format_clock(player_.position()) + " / " +
+             format_clock(player_.duration()));
+}
+
+void MainWindow::on_player_state(Player::State state)
+{
+  if (state == Player::State::Playing)
+    well_.set_playing(true);
+  else if (state == Player::State::Paused)
+    well_.set_playing(false);
   else
-    set_status("Paused — 0:00 / 0:00");
+    well_.stop();
+  sync_transport();
+}
+
+void MainWindow::on_player_position(gint64 position, gint64 duration)
+{
+  if (!seek_dragging_ && duration > 0) {
+    seek_.set_value(static_cast<double>(position) / static_cast<double>(duration));
+  }
+  seek_.set_sensitive(duration > 0);
+  update_clock();
+}
+
+void MainWindow::on_player_error(const Glib::ustring& message)
+{
+  set_status("Error — " + message);
+}
+
+bool MainWindow::on_seek_press(GdkEventButton*)
+{
+  seek_dragging_ = true;
+  return false;
+}
+
+bool MainWindow::on_seek_release(GdkEventButton*)
+{
+  seek_dragging_ = false;
+  const gint64 dur = player_.duration();
+  if (dur > 0)
+    player_.seek(static_cast<gint64>(seek_.get_value() * static_cast<double>(dur)));
+  return false;
+}
+
+void MainWindow::on_volume_changed()
+{
+  player_.set_volume(volume_.get_value());
 }
 
 void MainWindow::on_not_yet(const Glib::ustring& feature)
 {
-  set_status(feature + " arrives after M1.");
+  set_status(feature + " arrives after M2.");
 }
 
 }  // namespace earblaster

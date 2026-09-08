@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M1 done** (2026-09-08): Dummy Play / Pause / Stop drive a yellow tracer bead around the ring (1 rev/s). Pause freezes; Stop resets. No GStreamer yet. Next is M2 (sound).
+**M2 done** (2026-09-08): Open File plays audio through `playbin`. Transport, seek, volume, `mm:ss / mm:ss`. Bead follows playback; embedded cover stretch-fills after one lap. Next is M3 (playlist).
 
 | File | What |
 |---|---|

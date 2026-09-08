@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "player.hpp"
 #include "seal_view.hpp"
 
 #include <gtkmm.h>
@@ -27,6 +28,13 @@ class MainWindow : public Gtk::Window {
   void on_stop();
   void on_play_pause();
   void sync_transport();
+  void update_clock();
+  void on_player_state(Player::State state);
+  void on_player_position(gint64 position, gint64 duration);
+  void on_player_error(const Glib::ustring& message);
+  bool on_seek_press(GdkEventButton* event);
+  bool on_seek_release(GdkEventButton* event);
+  void on_volume_changed();
   void on_not_yet(const Glib::ustring& feature);
 
   Gtk::Box root_{Gtk::ORIENTATION_VERTICAL, 0};
@@ -49,9 +57,8 @@ class MainWindow : public Gtk::Window {
   Glib::RefPtr<Gtk::ListStore> store_;
   Gtk::Statusbar status_;
   guint status_ctx_ = 0;
-
-  enum class DummyState { Stopped, Playing, Paused };
-  DummyState dummy_ = DummyState::Stopped;
+  Player player_;
+  bool seek_dragging_ = false;
 
   struct Columns : public Gtk::TreeModel::ColumnRecord {
     Columns()

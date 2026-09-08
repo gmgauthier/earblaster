@@ -9,14 +9,14 @@ Repo: https://github.com/gmgauthier/earblaster
 
 ## Status (2026-09-08)
 
-**M1 is done.** Dummy Play / Pause / Stop drive the well. Compiled on Debian 13.
+**M2 is in the tree.** `Player` wraps `playbin`. Compiled on Debian 13.
 
-- Play: yellow tracer bead laps the ring once per second (`add_tick_callback`); bolt stays upright
-- Pause: freeze the bead at the current angle
-- Stop: hide the bead, angle 0
-- Prev / Next, Open File, seek still stubs. No GStreamer yet
+- Open File plays MP3 / Ogg / FLAC / WAV / M4A
+- Play / Pause / Stop, seek, volume, status `mm:ss / mm:ss`
+- Bead follows GStreamer state; `GST_TAG_IMAGE` feeds `SealView::set_cover`
+- Audio only (`video-sink` = fakesink). Playlist still empty
 
-Next: **M2 — Sound.**
+Next: **M3 — Playlist.**
 
 ## 1. Locked decisions
 
@@ -153,9 +153,9 @@ Tick callback. Dummy Play / Pause / Stop. A yellow bead runs the circumference o
 
 Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns the well to rest. No GStreamer.
 
-### M2 — Sound (end of week 1)
+### M2 — Sound — **done 2026-09-08**
 
-`Player` + Open File. Transport wired. Seek and volume. Status bar `mm:ss / mm:ss`. Audio formats via playbin (MP3, Ogg, FLAC, WAV at minimum). No video.
+`Player` + Open File. Transport wired. Seek and volume. Status bar `mm:ss / mm:ss`. Audio formats via playbin (MP3, Ogg, FLAC, WAV at minimum). No video. Embedded cover via `GST_TAG_IMAGE` after one bead lap.
 
 ### M3 — Playlist (week 2)
 
@@ -238,6 +238,6 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 ## 9. First code to write
 
-M0 and M1 are in the tree. Ring spin is dummy-driven.
+M0–M2 are in the tree. Sound is playbin.
 
-Next code is M2: `Player` wrapping `playbin`, Open File, real transport, seek, volume, status `mm:ss / mm:ss`. Wire `SealView::set_playing` / `stop` from `Player` instead of the dummy toolbar state.
+Next code is M3: playlist ListStore, add files/folder, remove, drag reorder, M3U, EOS → next, shuffle, repeat.
