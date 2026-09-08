@@ -9,14 +9,14 @@ Repo: https://github.com/gmgauthier/earblaster
 
 ## Status (2026-09-08)
 
-**M0 is done.** First compile and run on Debian 13 (Trixie) aarch64, XFCE on X11.
+**M1 is done.** Dummy Play / Pause / Stop drive the well. Compiled on Debian 13.
 
-- Meson 1.7 + gcc 14.2 + gtkmm-3.0 3.24.10
-- Window opens the locked layout: menus, navy well, ring + bolt, EARBLASTER pill, transport stubs, seek/volume, empty playlist, status bar
-- About dialog loads `brand/lockup-pill.svg` and the guest phrasing
-- Work-machine window chrome may be Adwaita/dark; that is host theme, not the skin. Visual target remains XFCE + Clearlooks-Phenix on XLibre
+- Play: yellow tracer bead laps the ring once per second (`add_tick_callback`); bolt stays upright
+- Pause: freeze the bead at the current angle
+- Stop: hide the bead, angle 0
+- Prev / Next, Open File, seek still stubs. No GStreamer yet
 
-Next: **M1 — Spin.**
+Next: **M2 — Sound.**
 
 ## 1. Locked decisions
 
@@ -99,7 +99,8 @@ Wrap one `GstElement* playbin`.
 ### `SealView` : `Gtk::DrawingArea`
 
 ```cpp
-void set_playing(bool);
+void set_playing(bool);                           // play vs pause; does not reset angle
+void stop();                                      // freeze off, angle 0
 void set_cover(const Glib::RefPtr<Gdk::Pixbuf>&); // empty clears
 void set_video_widget(Gtk::Widget*);              // nullptr restores Cairo
 ```
@@ -146,9 +147,11 @@ Done when: `ninja && ./earblaster` opens the locked layout on XFCE.
 
 Verified: Debian 13 aarch64, XFCE/X11. Layout, well, pill text, About lockup all present. Transport and Open File remain stubs.
 
-### M1 — Spin (days)
+### M1 — Spin — **done 2026-09-08**
 
-Tick callback. `set_playing(true)` from a dummy toolbar toggle (Play / Pause is enough). Confirm the ring rotates and the bolt stays upright. Freeze on pause. Reset angle on stop.
+Tick callback. Dummy Play / Pause / Stop. A yellow bead runs the circumference once per second so motion is visible on a uniform ring. Bolt stays upright. Freeze on pause. Hide bead and reset angle on stop.
+
+Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns the well to rest. No GStreamer.
 
 ### M2 — Sound (end of week 1)
 
@@ -234,6 +237,6 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 ## 9. First code to write
 
-M0 is in the tree and has been run.
+M0 and M1 are in the tree. Ring spin is dummy-driven.
 
-Do not touch GStreamer until the ring spins. Next code is M1: `SealView::set_playing`, a tick callback, and dummy Play/Pause on the existing buttons.
+Next code is M2: `Player` wrapping `playbin`, Open File, real transport, seek, volume, status `mm:ss / mm:ss`. Wire `SealView::set_playing` / `stop` from `Player` instead of the dummy toolbar state.

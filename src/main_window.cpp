@@ -34,7 +34,7 @@ MainWindow::MainWindow()
   build_body();
 
   status_ctx_ = status_.get_context_id("main");
-  set_status("Stopped — 0:00 / 0:00");
+  sync_transport();
 
   add(root_);
   show_all();
@@ -99,11 +99,8 @@ void MainWindow::build_menu()
 
   auto* play = Gtk::manage(new Gtk::Menu());
   add_item(*play, "_Play / Pause",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Play")));
-  add_item(*play, "_Stop",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Stop")));
+           sigc::mem_fun(*this, &MainWindow::on_play_pause));
+  add_item(*play, "_Stop", sigc::mem_fun(*this, &MainWindow::on_stop));
   add_menu("_Play", *play);
 
   auto* tools = Gtk::manage(new Gtk::Menu());
@@ -130,10 +127,11 @@ void MainWindow::build_body()
   transport_.set_homogeneous(true);
   transport_.set_margin_top(4);
   btn_prev_.set_sensitive(false);
-  btn_play_.set_sensitive(false);
-  btn_pause_.set_sensitive(false);
-  btn_stop_.set_sensitive(false);
   btn_next_.set_sensitive(false);
+  btn_play_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_play));
+  btn_pause_.signal_clicked().connect(
+      sigc::mem_fun(*this, &MainWindow::on_pause));
+  btn_stop_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
   transport_.pack_start(btn_prev_);
   transport_.pack_start(btn_play_);
   transport_.pack_start(btn_pause_);
@@ -216,9 +214,59 @@ void MainWindow::on_about()
   dlg.run();
 }
 
+void MainWindow::on_play()
+{
+  if (dummy_ == DummyState::Playing)
+    return;
+  dummy_ = DummyState::Playing;
+  well_.set_playing(true);
+  sync_transport();
+}
+
+void MainWindow::on_pause()
+{
+  if (dummy_ != DummyState::Playing)
+    return;
+  dummy_ = DummyState::Paused;
+  well_.set_playing(false);
+  sync_transport();
+}
+
+void MainWindow::on_stop()
+{
+  if (dummy_ == DummyState::Stopped)
+    return;
+  dummy_ = DummyState::Stopped;
+  well_.stop();
+  sync_transport();
+}
+
+void MainWindow::on_play_pause()
+{
+  if (dummy_ == DummyState::Playing)
+    on_pause();
+  else
+    on_play();
+}
+
+void MainWindow::sync_transport()
+{
+  const bool playing = dummy_ == DummyState::Playing;
+  const bool stopped = dummy_ == DummyState::Stopped;
+  btn_play_.set_sensitive(!playing);
+  btn_pause_.set_sensitive(playing);
+  btn_stop_.set_sensitive(!stopped);
+  if (stopped)
+    set_status("Stopped — 0:00 / 0:00");
+  else if (playing)
+    set_status("Playing — 0:00 / 0:00");
+  else
+    set_status("Paused — 0:00 / 0:00");
+}
+
 void MainWindow::on_not_yet(const Glib::ustring& feature)
 {
-  set_status(feature + " arrives after M0.");
+  set_status(feature + " arrives after M1.");
 }
 
 }  // namespace earblaster

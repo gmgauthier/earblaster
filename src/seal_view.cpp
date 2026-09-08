@@ -17,6 +17,10 @@ constexpr double kGlowR = 126.0 / 255.0;
 constexpr double kGlowG = 200.0 / 255.0;
 constexpr double kGlowB = 227.0 / 255.0;
 
+/* Tracer bead: one trip around the ring per second. 0 rad = 12 o'clock. */
+constexpr double kRevPerSec = 1.0;
+constexpr double kRadPerSec = kRevPerSec * 2.0 * M_PI;
+
 }  // namespace
 
 SealView::SealView()
@@ -27,24 +31,72 @@ SealView::SealView()
   get_style_context()->add_class("earblaster-well");
 }
 
+SealView::~SealView()
+{
+  stop_ticking();
+}
+
 void SealView::set_playing(bool playing)
 {
   if (playing_ == playing)
     return;
   playing_ = playing;
-  if (!playing_)
-    angle_ = 0.0;
+  if (playing_) {
+    show_bead_ = true;
+    start_ticking();
+  } else {
+    stop_ticking();
+  }
   queue_draw();
+}
+
+void SealView::stop()
+{
+  playing_ = false;
+  show_bead_ = false;
+  angle_ = 0.0;
+  stop_ticking();
+  queue_draw();
+}
+
+void SealView::start_ticking()
+{
+  if (tick_id_ != 0)
+    return;
+  last_tick_us_ = 0;
+  tick_id_ = add_tick_callback(sigc::mem_fun(*this, &SealView::on_tick));
+}
+
+void SealView::stop_ticking()
+{
+  if (tick_id_ == 0)
+    return;
+  remove_tick_callback(tick_id_);
+  tick_id_ = 0;
+  last_tick_us_ = 0;
+}
+
+bool SealView::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
+{
+  if (!playing_ || !clock)
+    return true;
+
+  const gint64 now = clock->get_frame_time();
+  if (last_tick_us_ != 0) {
+    const double dt = static_cast<double>(now - last_tick_us_) / 1e6;
+    angle_ = std::fmod(angle_ + dt * kRadPerSec, 2.0 * M_PI);
+    if (angle_ < 0.0)
+      angle_ += 2.0 * M_PI;
+    queue_draw();
+  }
+  last_tick_us_ = now;
+  return true;
 }
 
 void SealView::draw_ring(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
                          double cy, double radius) const
 {
   cr->save();
-  cr->translate(cx, cy);
-  cr->rotate(angle_);
-  cr->translate(-cx, -cy);
-
   cr->set_source_rgba(kGlowR, kGlowG, kGlowB, 0.55);
   cr->set_line_width(radius * 0.072);
   cr->arc(cx, cy, radius, 0, 2.0 * M_PI);
@@ -54,7 +106,25 @@ void SealView::draw_ring(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->set_line_width(radius * 0.045);
   cr->arc(cx, cy, radius, 0, 2.0 * M_PI);
   cr->stroke();
+  cr->restore();
+}
 
+void SealView::draw_bead(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
+                         double cy, double radius) const
+{
+  /* Cairo y-down: 0 rad is 3 o'clock. Subtract π/2 so 0 sits at the top. */
+  const double theta = angle_ - M_PI / 2.0;
+  const double x = cx + radius * std::cos(theta);
+  const double y = cy + radius * std::sin(theta);
+  const double r = radius * 0.045 * 1.8;
+
+  cr->save();
+  cr->set_source_rgba(1.0, 0.92, 0.2, 0.4);
+  cr->arc(x, y, r * 1.85, 0, 2.0 * M_PI);
+  cr->fill();
+  cr->set_source_rgb(1.0, 0.85, 0.12);
+  cr->arc(x, y, r, 0, 2.0 * M_PI);
+  cr->fill();
   cr->restore();
 }
 
@@ -119,6 +189,8 @@ bool SealView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   const double radius = std::min(w, h) * 0.28;
   draw_ring(cr, cx, cy, radius);
   draw_bolt(cr, cx, cy, radius);
+  if (show_bead_)
+    draw_bead(cr, cx, cy, radius);
   draw_pill(cr, cx, cy + radius + 18.0, 138.0);
   return true;
 }

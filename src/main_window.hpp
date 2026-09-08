@@ -22,6 +22,11 @@ class MainWindow : public Gtk::Window {
   void on_open_file();
   void on_quit();
   void on_about();
+  void on_play();
+  void on_pause();
+  void on_stop();
+  void on_play_pause();
+  void sync_transport();
   void on_not_yet(const Glib::ustring& feature);
 
   Gtk::Box root_{Gtk::ORIENTATION_VERTICAL, 0};
@@ -44,6 +49,9 @@ class MainWindow : public Gtk::Window {
   Glib::RefPtr<Gtk::ListStore> store_;
   Gtk::Statusbar status_;
   guint status_ctx_ = 0;
+
+  enum class DummyState { Stopped, Playing, Paused };
+  DummyState dummy_ = DummyState::Stopped;
 
   struct Columns : public Gtk::TreeModel::ColumnRecord {
     Columns()

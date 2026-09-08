@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M0 done** (2026-09-08): Meson + gtkmm-3 window, static `SealView` (ring, bolt, pill), menus, About lockup, empty playlist. Compiled and run on Debian 13 / XFCE. No GStreamer yet. Next is M1 (spin).
+**M1 done** (2026-09-08): Dummy Play / Pause / Stop drive a yellow tracer bead around the ring (1 rev/s). Pause freezes; Stop resets. No GStreamer yet. Next is M2 (sound).
 
 | File | What |
 |---|---|
