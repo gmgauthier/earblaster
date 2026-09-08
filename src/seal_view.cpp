@@ -2,6 +2,8 @@
 
 #include "seal_view.hpp"
 
+#include <gdkmm/general.h>
+
 #include <cmath>
 
 namespace earblaster {
@@ -42,8 +44,12 @@ void SealView::set_playing(bool playing)
     return;
   playing_ = playing;
   if (playing_) {
-    show_bead_ = true;
-    start_ticking();
+    if (cover_visible()) {
+      show_bead_ = false;
+    } else {
+      show_bead_ = true;
+      start_ticking();
+    }
   } else {
     stop_ticking();
   }
@@ -55,8 +61,48 @@ void SealView::stop()
   playing_ = false;
   show_bead_ = false;
   angle_ = 0.0;
+  intro_spun_ = 0.0;
+  intro_done_ = false;
   stop_ticking();
   queue_draw();
+}
+
+void SealView::set_cover(const Glib::RefPtr<Gdk::Pixbuf>& pixbuf)
+{
+  cover_ = pixbuf;
+  recache_cover();
+  if (cover_visible()) {
+    show_bead_ = false;
+    stop_ticking();
+  }
+  queue_draw();
+}
+
+void SealView::recache_cover()
+{
+  cover_scaled_.reset();
+  if (!cover_)
+    return;
+  const Gtk::Allocation alloc = get_allocation();
+  const int w = alloc.get_width();
+  const int h = alloc.get_height();
+  if (w < 1 || h < 1)
+    return;
+  if (cover_->get_width() == w && cover_->get_height() == h)
+    cover_scaled_ = cover_;
+  else
+    cover_scaled_ = cover_->scale_simple(w, h, Gdk::INTERP_BILINEAR);
+}
+
+bool SealView::cover_visible() const
+{
+  return static_cast<bool>(cover_) && intro_done_;
+}
+
+void SealView::on_size_allocate(Gtk::Allocation& allocation)
+{
+  Gtk::DrawingArea::on_size_allocate(allocation);
+  recache_cover();
 }
 
 void SealView::start_ticking()
@@ -84,9 +130,22 @@ bool SealView::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
   const gint64 now = clock->get_frame_time();
   if (last_tick_us_ != 0) {
     const double dt = static_cast<double>(now - last_tick_us_) / 1e6;
-    angle_ = std::fmod(angle_ + dt * kRadPerSec, 2.0 * M_PI);
+    const double step = dt * kRadPerSec;
+    angle_ = std::fmod(angle_ + step, 2.0 * M_PI);
     if (angle_ < 0.0)
       angle_ += 2.0 * M_PI;
+    if (!intro_done_) {
+      intro_spun_ += step;
+      if (intro_spun_ >= 2.0 * M_PI)
+        intro_done_ = true;
+    }
+    if (cover_visible()) {
+      show_bead_ = false;
+      last_tick_us_ = now;
+      tick_id_ = 0;
+      queue_draw();
+      return false;
+    }
     queue_draw();
   }
   last_tick_us_ = now;
@@ -179,6 +238,12 @@ bool SealView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
   const Gtk::Allocation alloc = get_allocation();
   const double w = alloc.get_width();
   const double h = alloc.get_height();
+
+  if (cover_visible() && cover_scaled_) {
+    Gdk::Cairo::set_source_pixbuf(cr, cover_scaled_, 0, 0);
+    cr->paint();
+    return true;
+  }
 
   cr->set_source_rgb(kNavyR, kNavyG, kNavyB);
   cr->rectangle(0, 0, w, h);

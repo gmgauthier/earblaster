@@ -15,10 +15,10 @@ LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLund
 EarBlaster is a single-window player in the Windows Media Player 7 shape.
 
 - gtkmm-3.0 + GTK3 CSS + Meson
-- GStreamer 1.0 `playbin` for audio and video
+- GStreamer 1.0 `playbin` for **audio only** (no video)
 - One skin (`lcos`), navy well + ice-white neon
 - Spinning single-ring lightning mark while a track plays
-- Embedded or sidecar album art overlays the mark
+- Embedded or sidecar album art: one bead lap, then stretch-fills the well
 - Local files only in the default build
 
 It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. The product mark is the ring-and-bolt; the wordmark is the EARBLASTER pill.
@@ -32,7 +32,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones M0–M6 |
 | [brand/](brand/) | Official marks and the UI reference |
 
-v1.0 is M0 through M6 in the development plan: window, spin, sound, playlist, cover/video, EQ, `.deb`.
+v1.0 is M0 through M6 in the development plan: window, spin, sound, playlist, cover, EQ, `.deb`. Audio only; VLC stays the video player.
 
 ## Brand
 

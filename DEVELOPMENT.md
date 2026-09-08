@@ -1,6 +1,6 @@
 # EarBlaster development plan
 
-A gtkmm-3 + GStreamer media player for LCOS. WMP 7 layout, one LCOS-flavoured skin, third-party branding.
+A gtkmm-3 + GStreamer **audio** player for LCOS. WMP 7 layout, one LCOS-flavoured skin, third-party branding. No video.
 
 Reference window: `brand/ui-reference.svg`  
 Marks: `brand/README.md`  
@@ -25,8 +25,9 @@ Next: **M2 — Sound.**
 | Product | Original app, not a Qmmp/Audacious rebrand |
 | Look | Windows Media Player 7: one decorated window, playlist pane, vis well, transport |
 | Toolkit | C++17, gtkmm-3.0, GTK3 CSS, Meson |
-| Playback | GStreamer 1.0 `playbin` |
+| Playback | GStreamer 1.0 `playbin`, **audio only**. No video sink, no video codecs. VLC remains the LCOS video player. |
 | Tags / art | TagLib first; GStreamer `GST_TAG_IMAGE` fallback; sidecar `folder.jpg` / `cover.jpg` / `AlbumArt.jpg` |
+| Cover in well | One bead lap, then **stretch** the image to fill the entire well (no letterbox, no inset). Stop restores the mark. |
 | Skin | One skin: GTK CSS + Cairo `SealView`. Not `.wsz` |
 | Brand | Navy + ice neon, EARBLASTER pill, single-ring lightning mark. Not Bryan’s LCOS seal |
 | Network | None in the default build |
@@ -51,16 +52,15 @@ Next: **M2 — Sound.**
 
 Well stack, front to back:
 
-1. Video sink — current URI is video
-2. Cover pixbuf — embedded or sidecar art
-3. Spinning ring + upright bolt
-4. Navy `#0B1D38`
+1. Cover pixbuf — after one bead revolution, stretch-filled to the well
+2. Ring + upright bolt + tracer bead while playing (and during that first lap)
+3. Navy `#0B1D38`
 
-Pill is a caption under the circle. Hidden while cover or video is showing.
+Pill is a caption under the circle. Hidden once cover is showing.
 
-Motion: 6–10 RPM while `GST_STATE_PLAYING`. Freeze on pause. Angle 0 when stopped. Drive with `Gtk::Widget::add_tick_callback`.
+Motion: yellow bead, 1 rev/s, while `GST_STATE_PLAYING` and cover is not yet up. Freeze on pause. Angle 0 and cover hidden when stopped. Drive with `Gtk::Widget::add_tick_callback`.
 
-Cover: contain (letterbox), ~8–12 px inset, never stretch. Cache the scaled pixbuf on size-allocate.
+Cover: **stretch** to the well’s pixel size (ignore aspect). Cache the scaled pixbuf on size-allocate. If tags arrive after the lap has finished, show immediately.
 
 ## 3. Architecture
 
@@ -93,19 +93,19 @@ Wrap one `GstElement* playbin`.
 - `open(uri)`, `play()`, `pause()`, `stop()`, `seek(ns)`, `set_volume(0..1)`
 - Signals (sigc): `state_changed`, `position_changed`, `eos`, `error`, `tags_changed`
 - Query duration/position on a 250 ms timeout only while playing
-- Audio URI: default sink. Video URI: `gtksink` / `gtkglsink` widget handed to `SealView`
+- Audio sink: default (Pulse or ALSA). `video-sink` is `fakesink` so a video file cannot open a picture
+- File chooser and MIME filter: audio only (MP3, Ogg, FLAC, WAV, M4A at minimum)
 - EQ: bin `equalizer-10bands` on `audio-filter` when the dialog exists
 
 ### `SealView` : `Gtk::DrawingArea`
 
 ```cpp
 void set_playing(bool);                           // play vs pause; does not reset angle
-void stop();                                      // freeze off, angle 0
+void stop();                                      // hide bead, angle 0
 void set_cover(const Glib::RefPtr<Gdk::Pixbuf>&); // empty clears
-void set_video_widget(Gtk::Widget*);              // nullptr restores Cairo
 ```
 
-`on_draw`: navy, rotated ring, upright bolt, optional cover.
+`on_draw`: if intro lap is done and a cover is set, stretch-paint it over the well; otherwise navy, ring, bolt, bead, pill.
 
 Cairo notes from M0 (cairomm-1.0 on Trixie):
 
@@ -155,15 +155,15 @@ Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns 
 
 ### M2 — Sound (end of week 1)
 
-`Player` + Open File. Transport wired. Seek and volume. Status bar `mm:ss / mm:ss`. Formats via playbin (MP3, Ogg, FLAC, WAV at minimum).
+`Player` + Open File. Transport wired. Seek and volume. Status bar `mm:ss / mm:ss`. Audio formats via playbin (MP3, Ogg, FLAC, WAV at minimum). No video.
 
 ### M3 — Playlist (week 2)
 
 ListStore, add files/folder, remove, drag reorder, M3U load/save, EOS → next, shuffle, repeat.
 
-### M4 — Cover + video (week 2)
+### M4 — Cover (week 2)
 
-`CoverArt` into `SealView`. Pill hides when cover is set. Video URI swaps in `gtksink`.
+`CoverArt` into `SealView::set_cover`. After one bead lap, the image stretch-fills the well. Pill and mark hide. Stop restores the mark. No video widget.
 
 ### M5 — EQ + polish (week 3)
 
@@ -196,8 +196,9 @@ From M2:
 sudo apt install \
   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
-  gstreamer1.0-libav gstreamer1.0-gtk3 \
+  gstreamer1.0-libav \
   libtag1-dev
+# gstreamer1.0-gtk3 (gtksink) is not used — audio only.
 ```
 
 Optional theme check on a non-LCOS box:
@@ -227,8 +228,8 @@ meson compile -C build
 ## 8. Test matrix (v1.0)
 
 - Open MP3 with APIC, MP3 without art, FLAC with picture, folder with only `folder.jpg`
-- Video file uses the well; returning to audio restores ring or cover
-- Pause freezes the ring; stop resets it
+- Video files are rejected (chooser filter); playbin video-sink is fakesink
+- Pause freezes the bead; stop hides it
 - Playlist EOS, shuffle, empty list, missing file
 - Unplug Pulse → playbin should still find ALSA
 - XFCE + Clearlooks on XLibre: decorations and CSS do not fight

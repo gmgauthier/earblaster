@@ -188,9 +188,8 @@ void MainWindow::on_open_file()
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
   auto filter = Gtk::FileFilter::create();
-  filter->set_name("Audio and video");
+  filter->set_name("Audio");
   filter->add_mime_type("audio/*");
-  filter->add_mime_type("video/*");
   filter->add_pattern("*.mp3");
   filter->add_pattern("*.ogg");
   filter->add_pattern("*.oga");
