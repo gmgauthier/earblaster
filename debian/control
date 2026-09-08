@@ -1,0 +1,35 @@
+Source: earblaster
+Section: sound
+Priority: optional
+Maintainer: Greg Gauthier <gmgauthier@protonmail.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ meson (>= 0.56),
+ ninja-build,
+ pkg-config,
+ g++,
+ libgtkmm-3.0-dev,
+ libgstreamer1.0-dev,
+ libgstreamer-plugins-base1.0-dev,
+ libtag-dev
+Standards-Version: 4.7.0
+Homepage: https://gitea.scriptorium/gmgauthier/earblaster
+Vcs-Git: https://gitea.scriptorium/gmgauthier/earblaster.git
+Vcs-Browser: https://gitea.scriptorium/gmgauthier/earblaster
+Rules-Requires-Root: no
+
+Package: earblaster
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ gstreamer1.0-plugins-base,
+ gstreamer1.0-plugins-good,
+ gstreamer1.0-plugins-ugly,
+ gstreamer1.0-libav
+Recommends:
+ gstreamer1.0-pulseaudio | gstreamer1.0-alsa
+Description: audio player for The Lunduke Computer Operating System
+ EarBlaster is a single-window gtkmm-3 audio player in the Windows Media
+ Player 7 shape. Local files only, one LCOS-flavoured skin, no video.
+ Playback uses GStreamer playbin (MP3, Ogg, FLAC, WAV, M4A).

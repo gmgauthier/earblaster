@@ -1,6 +1,14 @@
 build/
+build-appimage/
 builddir/
+dist/
 .cache/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/earblaster/
+debian/*.substvars
+debian/*.debhelper.log
 *.o
 *~
 *.swp

@@ -25,11 +25,12 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M5 done** (2026-09-08): 10-band EQ, `~/.config/earblaster/earblaster.ini`, Space / arrows / Delete. Next is M6 (`.deb`).
+**M5 done** (2026-09-08): 10-band EQ, config, keyboard, single-instance. Next is M6 (`.deb` / tarball / AppImage — see [INSTALL.md](INSTALL.md)).
 
 | File | What |
 |---|---|
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones M0–M6 |
+| [INSTALL.md](INSTALL.md) | `.deb`, tarball, AppImage, and from-source install |
 | [brand/](brand/) | Official marks and the UI reference |
 
 v1.0 is M0 through M6 in the development plan: window, spin, sound, playlist, cover, EQ, `.deb`. Audio only; VLC stays the video player.

@@ -206,7 +206,13 @@ ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave tr
 
 ### M6 — Package (week 3)
 
-`lcos-packages/earblaster` Debian layout. `/usr/bin/earblaster`, icons under `hicolor`, skin under `/usr/share/earblaster/skin/lcos`. No daemon.
+In-tree `debian/` (native package). Artifacts via `./scripts/release.sh`:
+
+- **`.deb`** — preferred on LCOS / Devuan / Debian
+- **source tarball** — `meson dist`
+- **AppImage** — fallback; host GStreamer plugins (see INSTALL.md)
+
+`/usr/bin/earblaster`, icons under `hicolor`, skin under `/usr/share/earblaster/skin/lcos`. No daemon.
 
 **v1.0 is M0–M6.**
 
@@ -275,4 +281,4 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 M0–M5 are in the tree.
 
-Next is M6: Debian layout under `lcos-packages/earblaster`.
+Next is M6: `debian/` + `./scripts/release.sh` (deb, tarball, AppImage). See INSTALL.md.
