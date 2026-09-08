@@ -15,6 +15,7 @@ gtkmm = dependency('gtkmm-3.0')
 gst = dependency('gstreamer-1.0')
 gst_tag = dependency('gstreamer-tag-1.0')
 gst_pbutils = dependency('gstreamer-pbutils-1.0')
+taglib = dependency('taglib')
 
 conf = configuration_data()
 conf.set_quoted('VERSION', meson.project_version())
@@ -39,8 +40,9 @@ executable(
   'src/about_dialog.cpp',
   'src/player.cpp',
   'src/playlist.cpp',
+  'src/cover_art.cpp',
   include_directories: inc,
-  dependencies: [gtkmm, gst, gst_tag, gst_pbutils],
+  dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
   install: true,
   install_dir: get_option('bindir'),
 )

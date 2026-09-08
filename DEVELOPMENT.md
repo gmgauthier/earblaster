@@ -9,14 +9,13 @@ Repo: https://github.com/gmgauthier/earblaster
 
 ## Status (2026-09-08)
 
-**M3 is in the tree.** Playlist uses **New** vs **Add**. Compiled on Debian 13.
+**M4 is in the tree.** Cover art stretch-fills the well after one bead lap.
 
-- New File/Folder/Playlist replaces the list and plays the first row
-- Add File/Folder/Playlist and drag-drop append; transport stays put
-- Prev/Next, EOS → next, Shuffle, Repeat (all). Edit → Remove / Delete
-- Double-click plays that row. Save Playlist writes M3U
+- TagLib embedded picture first, then sidecar `folder.jpg` / `cover.jpg` / `front.jpg` (and png/webp)
+- `GST_TAG_IMAGE` still used if both of those miss
+- Stop restores the mark
 
-Next: **M4 — Cover** (TagLib + sidecars; well already stretch-fills `GST_TAG_IMAGE`).
+Next: **M5 — EQ + keys.**
 
 ## 1. Locked decisions
 
@@ -197,9 +196,9 @@ Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns 
 
 ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave transport). New/Add File (multi-select), New/Add Folder (recursive), M3U New/Add/Save. Drag-drop is Add. Double-click plays that row. Prev/Next, EOS → next, shuffle, repeat. Relabel M2 “Open File…” to “New File…”.
 
-### M4 — Cover (week 2)
+### M4 — Cover — **done 2026-09-08**
 
-`CoverArt` into `SealView::set_cover`. After one bead lap, the image stretch-fills the well. Pill and mark hide. Stop restores the mark. No video widget.
+`load_cover` into `SealView::set_cover`. TagLib first, then sidecar, then `GST_TAG_IMAGE`. After one bead lap, the image stretch-fills the well. Pill and mark hide. Stop restores the mark. No video widget.
 
 ### M5 — EQ + polish (week 3)
 
@@ -233,7 +232,7 @@ sudo apt install \
   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
   gstreamer1.0-libav \
-  libtag1-dev
+  libtag-dev
 # gstreamer1.0-gtk3 (gtksink) is not used — audio only.
 ```
 
@@ -274,6 +273,6 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 ## 9. First code to write
 
-M0–M3 are in the tree.
+M0–M4 are in the tree.
 
-Next code is M4: `CoverArt` with TagLib and sidecar `folder.jpg` / `cover.jpg`, feeding `SealView::set_cover` (stretch after one bead lap).
+Next code is M5: 10-band EQ window, `~/.config/earblaster.ini`, keyboard (Space, arrows, Del).

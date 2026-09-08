@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "cover_art.hpp"
 #include "player.hpp"
 #include "playlist.hpp"
 #include "seal_view.hpp"
@@ -49,6 +50,7 @@ class MainWindow : public Gtk::Window {
   void on_player_position(gint64 position, gint64 duration);
   void on_player_error(const Glib::ustring& message);
   void on_player_tags(const Glib::ustring& title, const Glib::ustring& artist);
+  void on_player_cover(const Glib::RefPtr<Gdk::Pixbuf>& pix);
   bool on_seek_press(GdkEventButton* event);
   bool on_seek_release(GdkEventButton* event);
   void on_volume_changed();
@@ -83,6 +85,7 @@ class MainWindow : public Gtk::Window {
   Player player_;
   Playlist playlist_;
   bool seek_dragging_ = false;
+  bool have_local_cover_ = false;
   Gtk::CheckMenuItem* shuffle_item_ = nullptr;
   Gtk::CheckMenuItem* repeat_item_ = nullptr;
 };

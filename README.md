@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M3 done** (2026-09-08): New vs Add playlist. Multi-select files, folders, M3U, drag-drop append, Prev/Next, EOS, shuffle/repeat. Next is M4 (TagLib cover).
+**M4 done** (2026-09-08): TagLib + sidecar covers stretch-fill the well after one bead lap. Next is M5 (EQ + keys).
 
 | File | What |
 |---|---|

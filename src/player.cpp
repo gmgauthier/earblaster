@@ -113,7 +113,6 @@ bool Player::open(const std::string& path_or_uri)
   uri_ = uri;
   position_ = 0;
   duration_ = 0;
-  signal_cover_.emit(Glib::RefPtr<Gdk::Pixbuf>{});
   g_object_set(playbin_, "uri", uri_.c_str(), "volume", volume_, nullptr);
   return true;
 }

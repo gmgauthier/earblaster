@@ -86,7 +86,8 @@ MainWindow::MainWindow()
       sigc::mem_fun(*this, &MainWindow::on_player_position));
   player_.signal_error().connect(
       sigc::mem_fun(*this, &MainWindow::on_player_error));
-  player_.signal_cover().connect(sigc::mem_fun(well_, &SealView::set_cover));
+  player_.signal_cover().connect(
+      sigc::mem_fun(*this, &MainWindow::on_player_cover));
   player_.signal_eos().connect(sigc::mem_fun(*this, &MainWindow::on_eos));
   player_.signal_tags().connect(sigc::mem_fun(*this, &MainWindow::on_player_tags));
   player_.set_volume(volume_.get_value());
@@ -338,9 +339,19 @@ void MainWindow::play_current()
     return;
   if (!player_.open(uri))
     return;
+  const auto cover = load_cover(uri);
+  have_local_cover_ = static_cast<bool>(cover);
   well_.stop();
+  well_.set_cover(cover);
   player_.play();
   select_current_row();
+}
+
+void MainWindow::on_player_cover(const Glib::RefPtr<Gdk::Pixbuf>& pix)
+{
+  if (have_local_cover_ || !pix)
+    return;
+  well_.set_cover(pix);
 }
 
 void MainWindow::select_current_row()
