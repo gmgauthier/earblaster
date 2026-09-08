@@ -100,7 +100,7 @@ void SealView::draw_pill(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->get_text_extents(label, ext);
   cr->move_to(cx - ext.width * 0.5 - ext.x_bearing,
               y + h * 0.5 - ext.height * 0.5 - ext.y_bearing);
-  cr->fill();
+  cr->show_text(label);
   cr->restore();
 }
 
