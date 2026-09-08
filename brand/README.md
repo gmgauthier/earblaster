@@ -5,7 +5,7 @@ Locked 2026-09-08. Third-party app *for* LCOS, not LCOS house art.
 ## Palette
 
 | Token | Hex | Use |
-|---|---|
+|---|---|---|
 | Navy | `#0B1D38` | wells, icon field, lockup ground |
 | Ice | `#E8F2FF` | rings, bolt, pill outline, wordmark |
 | Ice glow | `#7EC8E3` | neon fringe only |
@@ -16,23 +16,21 @@ Locked 2026-09-08. Third-party app *for* LCOS, not LCOS house art.
 
 | File | Role |
 |---|---|
-| `mark-ring-bolt.svg` | **Primary mark (vector).** Single ring + bolt. |
-| `icon-tile.svg` | **Desktop icon (vector).** Rounded navy tile, speaker rings + bolt. |
-| `lockup-pill.svg` | **Product lockup (vector).** Bolt-circle + EARBLASTER pill. |
-| `mark-ring-bolt.png` | Raster preview of the primary mark. |
+| `mark-ring-bolt.png` | **Primary mark.** Single ring + bolt. Spins in the navy well. Window icon fallback. |
 | `mark-ring-bolt-256.png` | Same, 256px. |
 | `mark-ring-bolt-alt.png` | Alternate render of the same mark. Do not ship both. |
-| `icon-tile.png` | Raster desktop / `.desktop` icon. |
+| `icon-tile.png` | **Desktop / `.desktop` icon.** Rounded navy tile, speaker rings + bolt. |
 | `icon-tile-128.png` `icon-tile-48.png` `icon-tile-32.png` | Menu sizes. |
 | `icon-tile-alt.png` | Alternate tile. |
-| `lockup-pill.png` | Raster product lockup. |
+| `lockup-pill.png` | **Product lockup.** Bolt-circle + EARBLASTER pill. About box, splash. |
 | `lockup-pill-alt.png` | Alternate lockup. |
-| `ui-reference.png` | **Locked window.** Implement this layout. |
+| `ui-reference.svg` | **Locked window.** Implement this layout. Shown on the project README. |
+| `ui-reference.png` / `ui-reference.jpg` | Raster exports of the same window. Local preview; not required on Git. |
 | `ui-reference-alt.png` | Earlier pass of the same layout. |
 
-Primary ship set: `mark-ring-bolt.svg`, `icon-tile.svg`, `lockup-pill.svg` (and PNG previews of the same).
+Primary ship set: `mark-ring-bolt.svg`, `icon-tile.svg`, `lockup-pill.svg`, `ui-reference.svg`.
 
-Vector masters are what Git tracks cleanly. Rasters are preview exports of the same marks. Working-tree PNGs live in the project folder if a binary push is needed later.
+Vector masters (what Git tracks cleanly): `mark-ring-bolt.svg`, `icon-tile.svg`, `lockup-pill.svg`, `ui-reference.svg`. Rasters are preview exports of the same marks.
 
 ## Grammar
 
@@ -42,4 +40,4 @@ Vector masters are what Git tracks cleanly. Rasters are preview exports of the s
 - About footer only: “EarBlaster — a media player for The Lunduke Computer Operating System.”
 - Animation: rotate the ring; keep the bolt upright. Cover art overlays the circle; hide the pill while art is up.
 
-Runtime well should draw ring + bolt in Cairo so the spin is clean at any size.
+These PNGs are reference. Runtime well should draw ring + bolt in Cairo so the spin is clean at any size.
