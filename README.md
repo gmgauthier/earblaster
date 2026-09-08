@@ -2,6 +2,8 @@
 
 A media player **for The Lunduke Computer Operating System (LCOS)**.
 
+![EarBlaster v1.0 window mock](brand/ui-reference.svg)
+
 This is the first application intended exclusively for LCOS. It is not a port of an existing Linux player and it is not LCOS house software. It is a third-party app written to live on that desktop: XFCE, XLibre, Clearlooks chrome, no systemd, no online account, no AI features.
 
 More LCOS-only applications will follow this one.
@@ -36,10 +38,10 @@ v1.0 is M0 through M6 in the development plan: window, spin, sound, playlist, co
 
 Palette: navy `#0B1D38`, ice `#E8F2FF`, client gray `#E6E6E1`.
 
-- `brand/mark-ring-bolt.png` — spinning well mark
-- `brand/icon-tile.png` — desktop / menu icon
-- `brand/lockup-pill.png` — About box lockup
-- `brand/ui-reference.png` — window we implement
+- `brand/mark-ring-bolt.svg` — spinning well mark
+- `brand/icon-tile.svg` — desktop / menu icon
+- `brand/lockup-pill.svg` — About box lockup
+- `brand/ui-reference.svg` — locked window mock (the screenshot above)
 
 Grammar and file list: [brand/README.md](brand/README.md)
 
