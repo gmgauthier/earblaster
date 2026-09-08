@@ -75,6 +75,8 @@ MainWindow::MainWindow()
   set_border_width(0);
   get_style_context()->add_class("earblaster-window");
 
+  settings_.load();
+
   load_css();
   load_window_icon();
   build_menu();
@@ -90,13 +92,34 @@ MainWindow::MainWindow()
       sigc::mem_fun(*this, &MainWindow::on_player_cover));
   player_.signal_eos().connect(sigc::mem_fun(*this, &MainWindow::on_eos));
   player_.signal_tags().connect(sigc::mem_fun(*this, &MainWindow::on_player_tags));
-  player_.set_volume(volume_.get_value());
+
+  volume_.set_value(settings_.volume);
+  player_.set_volume(settings_.volume);
+  volume_.signal_value_changed().connect(
+      sigc::mem_fun(*this, &MainWindow::on_volume_changed));
+  for (int i = 0; i < Settings::kEqBands; ++i)
+    player_.set_eq_band(i, settings_.eq[i]);
+  if (shuffle_item_)
+    shuffle_item_->set_active(settings_.shuffle);
+  if (repeat_item_)
+    repeat_item_->set_active(settings_.repeat);
+
+  add_events(Gdk::KEY_PRESS_MASK);
+  signal_key_press_event().connect(sigc::mem_fun(*this, &MainWindow::on_key_press),
+                                   false);
+  signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::on_window_delete));
+  signal_hide().connect(sigc::mem_fun(*this, &MainWindow::persist));
 
   status_ctx_ = status_.get_context_id("main");
   sync_transport();
 
   add(root_);
   show_all();
+
+  if (settings_.window_w > 0 && settings_.window_h > 0)
+    resize(settings_.window_w, settings_.window_h);
+  if (settings_.window_x >= 0 && settings_.window_y >= 0)
+    move(settings_.window_x, settings_.window_y);
 }
 
 void MainWindow::load_css()
@@ -185,9 +208,7 @@ void MainWindow::build_menu()
   add_menu("_Play", *play);
 
   auto* tools = Gtk::manage(new Gtk::Menu());
-  add_item(*tools, "_Equalizer…",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Equalizer")));
+  add_item(*tools, "_Equalizer…", sigc::mem_fun(*this, &MainWindow::on_equalizer));
   add_menu("_Tools", *tools);
 
   auto* help = Gtk::manage(new Gtk::Menu());
@@ -236,8 +257,6 @@ void MainWindow::build_body()
   volume_.set_value(0.8);
   volume_.set_draw_value(false);
   volume_.set_margin_top(6);
-  volume_.signal_value_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::on_volume_changed));
   left_.pack_start(volume_label_, Gtk::PACK_SHRINK);
   left_.pack_start(volume_, Gtk::PACK_SHRINK);
 
@@ -475,6 +494,7 @@ void MainWindow::on_remove_rows()
 
 void MainWindow::on_quit()
 {
+  persist();
   hide();
 }
 
@@ -536,14 +556,15 @@ void MainWindow::on_next()
 
 void MainWindow::on_shuffle()
 {
-  playlist_.set_shuffle(shuffle_item_ && shuffle_item_->get_active());
+  settings_.shuffle = shuffle_item_ && shuffle_item_->get_active();
+  playlist_.set_shuffle(settings_.shuffle);
 }
 
 void MainWindow::on_repeat()
 {
-  playlist_.set_repeat((repeat_item_ && repeat_item_->get_active())
-                           ? Playlist::Repeat::All
-                           : Playlist::Repeat::Off);
+  settings_.repeat = repeat_item_ && repeat_item_->get_active();
+  playlist_.set_repeat(settings_.repeat ? Playlist::Repeat::All
+                                        : Playlist::Repeat::Off);
 }
 
 void MainWindow::on_row_activated(const Gtk::TreeModel::Path& path,
@@ -639,6 +660,76 @@ bool MainWindow::on_seek_release(GdkEventButton*)
 void MainWindow::on_volume_changed()
 {
   player_.set_volume(volume_.get_value());
+  settings_.volume = volume_.get_value();
+}
+
+void MainWindow::on_equalizer()
+{
+  if (!eq_win_) {
+    eq_win_ = std::make_unique<EqWindow>(player_, settings_);
+    eq_win_->set_transient_for(*this);
+  }
+  eq_win_->present();
+}
+
+void MainWindow::persist()
+{
+  int x = 0, y = 0, w = 0, h = 0;
+  get_position(x, y);
+  get_size(w, h);
+  settings_.window_x = x;
+  settings_.window_y = y;
+  settings_.window_w = w;
+  settings_.window_h = h;
+  settings_.volume = volume_.get_value();
+  settings_.shuffle = shuffle_item_ && shuffle_item_->get_active();
+  settings_.repeat = repeat_item_ && repeat_item_->get_active();
+  for (int i = 0; i < Settings::kEqBands; ++i)
+    settings_.eq[i] = player_.eq_band(i);
+  settings_.save();
+}
+
+bool MainWindow::on_window_delete(GdkEventAny*)
+{
+  persist();
+  return false;
+}
+
+void MainWindow::seek_relative(int seconds)
+{
+  gint64 pos = player_.position() + static_cast<gint64>(seconds) * GST_SECOND;
+  if (pos < 0)
+    pos = 0;
+  const gint64 dur = player_.duration();
+  if (dur > 0 && pos > dur)
+    pos = dur;
+  player_.seek(pos);
+}
+
+bool MainWindow::on_key_press(GdkEventKey* event)
+{
+  if (event->state & (Gdk::CONTROL_MASK | Gdk::MOD1_MASK))
+    return false;
+  switch (event->keyval) {
+    case GDK_KEY_space:
+    case GDK_KEY_KP_Space:
+      on_play_pause();
+      return true;
+    case GDK_KEY_Left:
+    case GDK_KEY_KP_Left:
+      seek_relative(-5);
+      return true;
+    case GDK_KEY_Right:
+    case GDK_KEY_KP_Right:
+      seek_relative(5);
+      return true;
+    case GDK_KEY_Delete:
+    case GDK_KEY_KP_Delete:
+      on_remove_rows();
+      return true;
+    default:
+      return false;
+  }
 }
 
 void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx,
@@ -654,16 +745,12 @@ void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx
 
 bool MainWindow::on_list_key_press(GdkEventKey* event)
 {
-  if (event->keyval == GDK_KEY_Delete || event->keyval == GDK_KEY_KP_Delete) {
-    on_remove_rows();
-    return true;
-  }
-  return false;
+  return on_key_press(event);
 }
 
 void MainWindow::on_not_yet(const Glib::ustring& feature)
 {
-  set_status(feature + " arrives after M3.");
+  set_status(feature + " arrives after M5.");
 }
 
 }  // namespace earblaster

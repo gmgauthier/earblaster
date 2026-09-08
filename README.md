@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M4 done** (2026-09-08): TagLib + sidecar covers stretch-fill the well after one bead lap. Next is M5 (EQ + keys).
+**M5 done** (2026-09-08): 10-band EQ, `~/.config/earblaster/earblaster.ini`, Space / arrows / Delete. Next is M6 (`.deb`).
 
 | File | What |
 |---|---|

@@ -9,13 +9,13 @@ Repo: https://github.com/gmgauthier/earblaster
 
 ## Status (2026-09-08)
 
-**M4 is in the tree.** Cover art stretch-fills the well after one bead lap.
+**M5 is in the tree.** Equalizer, config, keyboard.
 
-- TagLib embedded picture first, then sidecar `folder.jpg` / `cover.jpg` / `front.jpg` (and png/webp)
-- `GST_TAG_IMAGE` still used if both of those miss
-- Stop restores the mark
+- Tools → Equalizer: 10-band `equalizer-10bands`, Reset
+- `~/.config/earblaster/earblaster.ini` stores window geometry, volume, bands, shuffle, repeat
+- Space play/pause, Left/Right seek ±5s, Delete remove
 
-Next: **M5 — EQ + keys.**
+Next: **M6 — Package.**
 
 ## 1. Locked decisions
 
@@ -200,7 +200,7 @@ ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave tr
 
 `load_cover` into `SealView::set_cover`. TagLib first, then sidecar, then `GST_TAG_IMAGE`. After one bead lap, the image stretch-fills the well. Pill and mark hide. Stop restores the mark. No video widget.
 
-### M5 — EQ + polish (week 3)
+### M5 — EQ + polish — **done 2026-09-08**
 
 10-band dialog, persist bands in `~/.config/earblaster/earblaster.ini` (Glib::KeyFile). Window size/position. Keyboard: Space play/pause, arrows seek, Del remove.
 
@@ -273,6 +273,6 @@ M0 already covered: cold launch, About box, resize of the well, compile on aarch
 
 ## 9. First code to write
 
-M0–M4 are in the tree.
+M0–M5 are in the tree.
 
-Next code is M5: 10-band EQ window, `~/.config/earblaster.ini`, keyboard (Space, arrows, Del).
+Next is M6: Debian layout under `lcos-packages/earblaster`.

@@ -29,6 +29,11 @@ class Player {
   void seek(gint64 ns);
   void set_volume(double volume);
 
+  static constexpr int kEqBands = 10;
+  bool has_eq() const { return eq_ != nullptr; }
+  void set_eq_band(int band, double db);
+  double eq_band(int band) const;
+
   State state() const { return state_; }
   bool loaded() const { return !uri_.empty(); }
   gint64 position() const { return position_; }
@@ -61,6 +66,8 @@ class Player {
   void handle_tags(GstTagList* tags);
 
   GstElement* playbin_ = nullptr;
+  GstElement* eq_ = nullptr;
+  double eq_gain_[kEqBands] = {};
   guint bus_watch_id_ = 0;
   guint pos_timer_id_ = 0;
   std::string uri_;

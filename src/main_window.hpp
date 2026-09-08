@@ -3,11 +3,15 @@
 #pragma once
 
 #include "cover_art.hpp"
+#include "eq_window.hpp"
 #include "player.hpp"
 #include "playlist.hpp"
 #include "seal_view.hpp"
+#include "settings.hpp"
 
 #include <gtkmm.h>
+
+#include <memory>
 
 namespace earblaster {
 
@@ -32,6 +36,11 @@ class MainWindow : public Gtk::Window {
   void on_remove_rows();
   void on_quit();
   void on_about();
+  void on_equalizer();
+  void persist();
+  bool on_key_press(GdkEventKey* event);
+  void seek_relative(int seconds);
+  bool on_window_delete(GdkEventAny* event);
   void on_play();
   void on_pause();
   void on_stop();
@@ -82,8 +91,10 @@ class MainWindow : public Gtk::Window {
   Gtk::TreeView playlist_view_;
   Gtk::Statusbar status_;
   guint status_ctx_ = 0;
+  Settings settings_;
   Player player_;
   Playlist playlist_;
+  std::unique_ptr<EqWindow> eq_win_;
   bool seek_dragging_ = false;
   bool have_local_cover_ = false;
   Gtk::CheckMenuItem* shuffle_item_ = nullptr;

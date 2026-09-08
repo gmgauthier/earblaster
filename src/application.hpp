@@ -12,7 +12,14 @@ class Application : public Gtk::Application {
 
  protected:
   Application();
+  void on_startup() override;
   void on_activate() override;
+
+ private:
+  bool take_instance_lock();
+
+  int lock_fd_ = -1;
+  bool lock_ok_ = true;
 };
 
 }  // namespace earblaster

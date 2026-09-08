@@ -6,6 +6,9 @@
 
 #include <gdkmm/pixbufloader.h>
 
+#include <algorithm>
+#include <cstdio>
+
 namespace earblaster {
 namespace {
 
@@ -77,6 +80,10 @@ Player::Player()
     g_object_set(playbin_, "video-sink", vsink, nullptr);
   }
   g_object_set(playbin_, "volume", volume_, nullptr);
+
+  eq_ = gst_element_factory_make("equalizer-10bands", "earblaster-eq");
+  if (eq_)
+    g_object_set(playbin_, "audio-filter", eq_, nullptr);
 
   GstBus* bus = gst_element_get_bus(playbin_);
   bus_watch_id_ = gst_bus_add_watch(bus, &Player::on_bus, this);
@@ -161,6 +168,26 @@ void Player::set_volume(double volume)
   volume_ = volume;
   if (playbin_)
     g_object_set(playbin_, "volume", volume_, nullptr);
+}
+
+void Player::set_eq_band(int band, double db)
+{
+  if (band < 0 || band >= kEqBands)
+    return;
+  db = std::clamp(db, -24.0, 12.0);
+  eq_gain_[band] = db;
+  if (!eq_)
+    return;
+  char name[16];
+  std::snprintf(name, sizeof(name), "band%d", band);
+  g_object_set(eq_, name, db, nullptr);
+}
+
+double Player::eq_band(int band) const
+{
+  if (band < 0 || band >= kEqBands)
+    return 0.0;
+  return eq_gain_[band];
 }
 
 void Player::set_state(State state)
