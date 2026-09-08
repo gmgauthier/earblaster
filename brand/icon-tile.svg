@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EarBlaster desktop icon">
+  <rect width="512" height="512" rx="96" fill="#0B1D38"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#E8F2FF" stroke-width="10"/>
+  <circle cx="256" cy="256" r="104" fill="none" stroke="#E8F2FF" stroke-width="8"/>
+  <circle cx="256" cy="256" r="58" fill="none" stroke="#E8F2FF" stroke-width="7"/>
+  <path d="M168 108 L344 404" fill="none" stroke="#0B1D38" stroke-width="28" stroke-linecap="round"/>
+  <path d="M176 96 L352 416" fill="none" stroke="#E8F2FF" stroke-width="14" stroke-linecap="round"/>
+  <path d="M278 132 L214 262 H264 L248 372 L332 248 H280 Z" fill="#E8F2FF"/>
+</svg>

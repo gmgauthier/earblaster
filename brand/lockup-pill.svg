@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 384" role="img" aria-label="EarBlaster lockup">
+  <rect width="1024" height="384" fill="#0B1D38"/>
+  <circle cx="148" cy="192" r="72" fill="none" stroke="#E8F2FF" stroke-width="6"/>
+  <path d="M154 140 L122 198 H148 L140 248 L182 188 H156 Z" fill="#E8F2FF"/>
+  <rect x="260" y="112" width="680" height="160" rx="80" fill="none" stroke="#E8F2FF" stroke-width="6"/>
+  <text x="600" y="216" text-anchor="middle" font-family="DejaVu Sans, Liberation Sans, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="6" fill="#E8F2FF">EARBLASTER</text>
+</svg>

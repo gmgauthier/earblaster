@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EarBlaster mark">
+  <rect width="512" height="512" fill="#0B1D38"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#7EC8E3" stroke-width="10" opacity="0.45"/>
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#E8F2FF" stroke-width="6"/>
+  <path d="M268 118 L196 268 H250 L232 394 L328 236 H270 Z" fill="#E8F2FF"/>
+</svg>
