@@ -11,7 +11,7 @@ Repo: https://github.com/gmgauthier/earblaster
 
 **M2 is in the tree.** `Player` wraps `playbin`. Compiled on Debian 13.
 
-- Open File plays MP3 / Ogg / FLAC / WAV / M4A
+- New File… plays MP3 / Ogg / FLAC / WAV / M4A (M3 will add Add File… and folders)
 - Play / Pause / Stop, seek, volume, status `mm:ss / mm:ss`
 - Bead follows GStreamer state; `GST_TAG_IMAGE` feeds `SealView::set_cover`
 - Audio only (`video-sink` = fakesink). Playlist still empty
@@ -33,6 +33,7 @@ Next: **M3 — Playlist.**
 | Network | None in the default build |
 | Init / session | No systemd dependency. ALSA or Pulse via playbin. MPRIS optional later |
 | License | The Unlicense |
+| Playlist verbs | Two commands, never mixed. **New** = replace the list and start the first (or only) row now. **Add** = append to the list and do not change transport. “Play” is transport only (`>`, Play menu). |
 
 ## 2. Window
 
@@ -122,7 +123,42 @@ Order: TagLib front cover → first embedded picture → sidecar names in the fi
 
 ### Playlist
 
-`Gtk::ListStore`: filename, title, artist, duration, uri. Drag-drop files and `.m3u`. Double-click plays. Shuffle / repeat flags live on `Player`.
+`Gtk::ListStore`: filename, title, artist, duration, uri.
+
+Two verbs, used everywhere (File menu, drag-drop). “Play” on the transport and Play menu means play/pause the current row only.
+
+| Verb | List | Transport |
+|---|---|---|
+| **New** File / Folder / Playlist | replace | start the first new row immediately |
+| **Add** File / Folder / Playlist | append | unchanged (keep playing, paused, or stopped) |
+
+- **New File…** — multi-select; audio only; filename order; one file is a one-row list
+- **New Folder…** — that directory only (not recursive); audio only; filename order; play first
+- **Add File…** / **Add Folder…** — same scan rules, append
+- Drag files or `.m3u` onto the pane = **Add**
+- Double-click a row = play that row (list unchanged)
+- Stop resets the well; it does not clear the list. New/Add is what changes membership
+- EOS / Next walk the list; after the last row, stop (unless Repeat)
+
+File menu:
+
+```
+New File…
+New Folder…
+New Playlist…
+────────────────
+Add File…
+Add Folder…
+Add Playlist…
+────────────────
+Save Playlist…
+────────────────
+Quit
+```
+
+No list-pane buttons in v1. Do not label anything "Open" or use "Play" for queue commands.
+
+Shuffle / repeat flags live on `Player`.
 
 ## 4. Skin (`data/skin/lcos/lcos.css`)
 
@@ -159,7 +195,7 @@ Done when: Play shows the bead lapping the ring; Pause freezes it; Stop returns 
 
 ### M3 — Playlist (week 2)
 
-ListStore, add files/folder, remove, drag reorder, M3U load/save, EOS → next, shuffle, repeat.
+ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave transport). New/Add File (multi-select), New/Add Folder (non-recursive), M3U New/Add/Save. Drag-drop is Add. Double-click plays that row. Prev/Next, EOS → next, shuffle, repeat. Relabel M2 “Open File…” to “New File…”.
 
 ### M4 — Cover (week 2)
 

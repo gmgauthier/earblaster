@@ -111,10 +111,27 @@ void MainWindow::build_menu()
   };
 
   auto* file = Gtk::manage(new Gtk::Menu());
-  add_item(*file, "_Open File…", sigc::mem_fun(*this, &MainWindow::on_open_file));
-  add_item(*file, "Open _Folder…",
+  add_item(*file, "_New File…", sigc::mem_fun(*this, &MainWindow::on_open_file));
+  add_item(*file, "New _Folder…",
            sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("Open Folder")));
+                      Glib::ustring("New Folder")));
+  add_item(*file, "New P_laylist…",
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
+                      Glib::ustring("New Playlist")));
+  file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
+  add_item(*file, "_Add File…",
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
+                      Glib::ustring("Add File")));
+  add_item(*file, "Add Fol_der…",
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
+                      Glib::ustring("Add Folder")));
+  add_item(*file, "Add Playlis_t…",
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
+                      Glib::ustring("Add Playlist")));
+  file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
+  add_item(*file, "_Save Playlist…",
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
+                      Glib::ustring("Save Playlist")));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "_Quit", sigc::mem_fun(*this, &MainWindow::on_quit));
   add_menu("_File", *file);
@@ -224,7 +241,7 @@ void MainWindow::set_status(const Glib::ustring& text)
 
 void MainWindow::on_open_file()
 {
-  Gtk::FileChooserDialog dlg(*this, "Open File", Gtk::FILE_CHOOSER_ACTION_OPEN);
+  Gtk::FileChooserDialog dlg(*this, "New File", Gtk::FILE_CHOOSER_ACTION_OPEN);
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button("_Open", Gtk::RESPONSE_ACCEPT);
   auto filter = Gtk::FileFilter::create();
