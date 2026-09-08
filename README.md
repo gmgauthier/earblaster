@@ -25,7 +25,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-M0 scaffold is in the tree: Meson + gtkmm-3 window, static `SealView`, menus, empty playlist. No GStreamer yet.
+**M0 done** (2026-09-08): Meson + gtkmm-3 window, static `SealView` (ring, bolt, pill), menus, About lockup, empty playlist. Compiled and run on Debian 13 / XFCE. No GStreamer yet. Next is M1 (spin).
 
 | File | What |
 |---|---|
@@ -45,7 +45,7 @@ Palette: navy `#0B1D38`, ice `#E8F2FF`, client gray `#E6E6E1`.
 
 Grammar and file list: [brand/README.md](brand/README.md)
 
-About box line, when we get there:
+About box line (shipped in M0):
 
 > EarBlaster — a media player for The Lunduke Computer Operating System.
 

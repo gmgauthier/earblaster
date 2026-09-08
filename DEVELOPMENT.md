@@ -2,8 +2,21 @@
 
 A gtkmm-3 + GStreamer media player for LCOS. WMP 7 layout, one LCOS-flavoured skin, third-party branding.
 
-Reference window: `brand/ui-reference.png`  
-Marks: `brand/README.md`
+Reference window: `brand/ui-reference.svg`  
+Marks: `brand/README.md`  
+License: The Unlicense (`UNLICENSE`)  
+Repo: https://github.com/gmgauthier/earblaster
+
+## Status (2026-09-08)
+
+**M0 is done.** First compile and run on Debian 13 (Trixie) aarch64, XFCE on X11.
+
+- Meson 1.7 + gcc 14.2 + gtkmm-3.0 3.24.10
+- Window opens the locked layout: menus, navy well, ring + bolt, EARBLASTER pill, transport stubs, seek/volume, empty playlist, status bar
+- About dialog loads `brand/lockup-pill.svg` and the guest phrasing
+- Work-machine window chrome may be Adwaita/dark; that is host theme, not the skin. Visual target remains XFCE + Clearlooks-Phenix on XLibre
+
+Next: **M1 — Spin.**
 
 ## 1. Locked decisions
 
@@ -18,6 +31,7 @@ Marks: `brand/README.md`
 | Brand | Navy + ice neon, EARBLASTER pill, single-ring lightning mark. Not Bryan’s LCOS seal |
 | Network | None in the default build |
 | Init / session | No systemd dependency. ALSA or Pulse via playbin. MPRIS optional later |
+| License | The Unlicense |
 
 ## 2. Window
 
@@ -28,7 +42,7 @@ Marks: `brand/README.md`
 |  navy well                   |  #  Title        Artist  Time  |
 |    [ spinning ring + bolt ]  |                                |
 |    [ EARBLASTER pill ]       |                                |
-|  [<] [>] [||] [\u25a0] [>>]       |                                |
+|  [<] [>] [||] [■] [>>]       |                                |
 |  seek ==========  vol ====   |                                |
 +------------------------------+--------------------------------+
 | Stopped — 0:00 / 0:00                                         |
@@ -92,6 +106,11 @@ void set_video_widget(Gtk::Widget*);              // nullptr restores Cairo
 
 `on_draw`: navy, rotated ring, upright bolt, optional cover.
 
+Cairo notes from M0 (cairomm-1.0 on Trixie):
+
+- Use `begin_new_sub_path()`, not `new_sub_path()`
+- Pill lettering: `select_font_face` + `show_text`. Do not leave a text path and `fill()` after `stroke()` of the capsule — the path is already consumed
+
 ### `CoverArt`
 
 ```cpp
@@ -115,17 +134,21 @@ Stock GTK3 widgets. Clearlooks / Phenix keeps the window decorations.
 
 No custom title bar.
 
+Dev machine (Debian Trixie + i3/Regolith or XFCE): compile is enough with `libgtkmm-3.0-dev`. Widget look can be forced with `GTK_THEME=Clearlooks-Phenix` if the engine is installed. Full title-bar fidelity needs xfwm4 + that theme (LCOS VM or an XFCE session). GStreamer packages are not required until M2.
+
 ## 5. Milestones
 
-### M0 — Repo and window (days)
+### M0 — Repo and window — **done 2026-09-08**
 
-Meson project links gtkmm-3.0. Empty `MainWindow`, menus, CSS load, `SealView` with a static ring + bolt and a static pill. About dialog uses `lockup-pill.png`. `.desktop` uses `icon-tile.png`.
+Meson project links gtkmm-3.0. `MainWindow`, menus, CSS load, `SealView` with a static ring + bolt and a static pill. About dialog uses `brand/lockup-pill.svg`. `.desktop` uses the icon tile.
 
 Done when: `ninja && ./earblaster` opens the locked layout on XFCE.
 
+Verified: Debian 13 aarch64, XFCE/X11. Layout, well, pill text, About lockup all present. Transport and Open File remain stubs.
+
 ### M1 — Spin (days)
 
-Tick callback. `set_playing(true)` from a dummy toolbar toggle. Confirm bolt stays upright.
+Tick callback. `set_playing(true)` from a dummy toolbar toggle (Play / Pause is enough). Confirm the ring rotates and the bolt stays upright. Freeze on pause. Reset angle on stop.
 
 ### M2 — Sound (end of week 1)
 
@@ -155,15 +178,31 @@ Spectrum ring outside the neon ring, playlist cover column, CUE sheets, MPRIS, g
 
 ## 6. Tooling (Devuan Excalibur / Debian Trixie)
 
+M0 (current):
+
 ```
 sudo apt install \
   build-essential meson ninja-build pkg-config \
   g++ \
-  libgtkmm-3.0-dev \
+  libgtkmm-3.0-dev
+```
+
+From M2:
+
+```
+sudo apt install \
   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
   gstreamer1.0-libav gstreamer1.0-gtk3 \
   libtag1-dev
+```
+
+Optional theme check on a non-LCOS box:
+
+```
+sudo apt install gtk2-engines gtk2-engines-pixbuf
+# plus a Clearlooks-Phenix GTK3 theme if packaged
+GTK_THEME=Clearlooks-Phenix ./build/earblaster
 ```
 
 Build:
@@ -176,7 +215,7 @@ meson compile -C build
 
 ## 7. Packaging notes for LCOS
 
-- Match `lcos-updates`: Meson + a small `debian/` directory, GPL-3.0-or-later unless we decide otherwise
+- Match `lcos-updates`: Meson + a small `debian/` directory. License is The Unlicense.
 - Binary never runs as root
 - Depends on GTK3, GStreamer good/ugly/libav, taglib
 - Recommends the LCOS Clearlooks theme; do not vendor a window manager theme
@@ -191,8 +230,10 @@ meson compile -C build
 - Unplug Pulse → playbin should still find ALSA
 - XFCE + Clearlooks on XLibre: decorations and CSS do not fight
 
+M0 already covered: cold launch, About box, resize of the well, compile on aarch64 Trixie.
+
 ## 9. First code to write
 
-`meson.build`, `src/main.cpp`, `src/main_window.*`, `src/seal_view.*`, `data/skin/lcos/lcos.css`.
+M0 is in the tree and has been run.
 
-That is M0. Do not touch GStreamer until the window matches `brand/ui-reference.png`.
+Do not touch GStreamer until the ring spins. Next code is M1: `SealView::set_playing`, a tick callback, and dummy Play/Pause on the existing buttons.
