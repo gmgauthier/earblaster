@@ -87,7 +87,7 @@ void SealView::draw_pill(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->save();
   cr->set_source_rgb(kIceR, kIceG, kIceB);
   cr->set_line_width(2.0);
-  cr->new_sub_path();
+  cr->begin_new_sub_path();
   cr->arc(x + r, y + r, r, M_PI / 2.0, 3.0 * M_PI / 2.0);
   cr->arc(x + width - r, y + r, r, 3.0 * M_PI / 2.0, M_PI / 2.0);
   cr->close_path();
