@@ -1,0 +1,2 @@
+# Keep demo audio in git; leave it out of meson dist / git archive tarballs.
+data/samples/** export-ignore

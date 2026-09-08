@@ -63,13 +63,31 @@ do_appimage() {
   meson compile -C "${ROOT}/build-appimage"
   DESTDIR="$APPDIR" meson install -C "${ROOT}/build-appimage"
   export LINUXDEPLOY_OUTPUT_VERSION="$VERSION"
+  export APPIMAGE_EXTRACT_AND_RUN=1
+  PLUGIN_ARGS=""
+  if command -v linuxdeploy-plugin-gtk >/dev/null 2>&1 || \
+     [ -x "${ROOT}/scripts/linuxdeploy-plugin-gtk.sh" ]; then
+    PLUGIN_ARGS="--plugin gtk"
+    if [ -x "${ROOT}/scripts/linuxdeploy-plugin-gtk.sh" ]; then
+      export PATH="${ROOT}/scripts:${PATH}"
+    fi
+  fi
+  # GStreamer plugins stay on the host; see INSTALL.md.
+  # shellcheck disable=SC2086
   linuxdeploy --appdir "$APPDIR" \
-    --desktop "${APPDIR}/usr/share/applications/earblaster.desktop" \
+    --executable "${APPDIR}/usr/bin/earblaster" \
+    --desktop-file "${APPDIR}/usr/share/applications/earblaster.desktop" \
     --icon-file "${APPDIR}/usr/share/icons/hicolor/scalable/apps/earblaster.svg" \
+    $PLUGIN_ARGS \
     --output appimage
   mkdir -p "$DISTDIR"
-  mv -f EarBlaster-"${VERSION}"-*.AppImage "$DISTDIR/" 2>/dev/null || \
-    mv -f ./*.AppImage "$DISTDIR/"
+  # appimagetool writes next to the AppDir / cwd
+  for f in "${ROOT}/EarBlaster-${VERSION}"-*.AppImage \
+           "${ROOT}/build/EarBlaster-${VERSION}"-*.AppImage \
+           "${ROOT}"/*.AppImage; do
+    [ -e "$f" ] || continue
+    mv -f "$f" "$DISTDIR/"
+  done
   echo "appimage: $(ls -1 "$DISTDIR"/*.AppImage 2>/dev/null | tail -1)"
 }
 

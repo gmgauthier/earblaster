@@ -36,14 +36,14 @@ sudo apt install \
 From a release `.deb`:
 
 ```
-sudo apt install ./earblaster_0.1.0-1_amd64.deb
+sudo apt install ./dist/earblaster_0.1.0-2_amd64.deb
 ```
 
 Or, from this tree:
 
 ```
 ./scripts/release.sh deb
-sudo apt install ../earblaster_0.1.0-1_amd64.deb
+sudo apt install ./dist/earblaster_0.1.0-2_amd64.deb
 ```
 
 That installs:
@@ -60,7 +60,7 @@ Uninstall: `sudo apt remove earblaster`.
 
 ## 2. Source tarball
 
-`meson dist` produces `build/meson-dist/earblaster-VERSION.tar.xz`.
+`meson dist` produces `build/meson-dist/earblaster-VERSION.tar.xz` (demo audio under `data/samples/` is git-only, not in the tarball).
 
 ```
 tar -xf earblaster-0.1.0.tar.xz
