@@ -24,9 +24,11 @@ Locked 2026-09-08. Third-party app *for* LCOS, not LCOS house art.
 | `icon-tile-alt.png` | Alternate tile. |
 | `lockup-pill.png` | **Product lockup.** Bolt-circle + EARBLASTER pill. About box, splash. |
 | `lockup-pill-alt.png` | Alternate lockup. |
-| `ui-reference.svg` | **Locked window.** Implement this layout. Shown on the project README. |
-| `ui-reference.png` / `ui-reference.jpg` | Raster exports of the same window. Local preview; not required on Git. |
-| `ui-reference-alt.png` | Earlier pass of the same layout. |
+| `ui-reference.svg` | **Locked window.** Implement this layout. |
+| `screenshot-playback.png` | Live LCOS shot of the main window. README hero. |
+| `screenshot-about.png` | About box on LCOS. |
+| `screenshot-equalizer.png` | 10-band EQ on LCOS. |
+| `screenshot-preferences.png` | Preferences on LCOS. |
 
 Primary ship set: `mark-ring-bolt.svg`, `icon-tile.svg`, `lockup-pill.svg`, `ui-reference.svg`.
 

@@ -2,7 +2,7 @@
 
 A media player **for The Lunduke Computer Operating System (LCOS)**.
 
-![EarBlaster v1.0 window mock](brand/ui-reference.svg)
+![EarBlaster on LCOS](brand/screenshot-playback.png)
 
 Third-party software written to live on that desktop: XFCE, XLibre, Clearlooks chrome, no systemd, no online account, no AI features. It is not a port of an existing Linux player and it is not LCOS house software.
 
@@ -28,6 +28,12 @@ EarBlaster is a single-window **audio** player in the Windows Media Player 7 sha
 - Local files only in the default build
 
 It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. The product mark is the ring-and-bolt; the wordmark is the EARBLASTER pill.
+
+![About](brand/screenshot-about.png)
+
+![Equalizer](brand/screenshot-equalizer.png)
+
+![Preferences](brand/screenshot-preferences.png)
 
 ## Status
 
@@ -82,7 +88,9 @@ Palette: navy `#0B1D38`, ice `#E8F2FF`, client gray `#E6E6E1`.
 - `brand/mark-ring-bolt.svg` — spinning well mark
 - `brand/icon-tile.svg` — desktop / menu icon
 - `brand/lockup-pill.svg` — About box lockup
-- `brand/ui-reference.svg` — locked window mock (the screenshot above)
+- `brand/screenshot-playback.png` — LCOS window (hero image above)
+- `brand/screenshot-about.png` `screenshot-equalizer.png` `screenshot-preferences.png` — About, EQ, Preferences on LCOS
+- `brand/ui-reference.svg` — locked layout mock (not a live screenshot)
 
 Grammar and file list: [brand/README.md](brand/README.md)
 
