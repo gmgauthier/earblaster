@@ -231,6 +231,25 @@ void MainWindow::build_body()
 
   transport_.set_homogeneous(true);
   transport_.set_margin_top(4);
+  auto set_btn_icon = [](Gtk::Button& btn, const char* file, const char* tip) {
+    btn.set_tooltip_text(tip);
+    const std::string path = find_data_file(std::string("skin/lcos/") + file);
+    if (path.empty())
+      return;
+    try {
+      auto pix = Gdk::Pixbuf::create_from_file(path, 16, 16);
+      auto* img = Gtk::manage(new Gtk::Image(pix));
+      btn.set_image(*img);
+      btn.set_always_show_image(true);
+      btn.set_label("");
+    } catch (const Glib::Error&) {
+    }
+  };
+  set_btn_icon(btn_prev_, "btn-prev.svg", "Previous");
+  set_btn_icon(btn_play_, "btn-play.svg", "Play");
+  set_btn_icon(btn_pause_, "btn-pause.svg", "Pause");
+  set_btn_icon(btn_stop_, "btn-stop.svg", "Stop");
+  set_btn_icon(btn_next_, "btn-next.svg", "Next");
   btn_play_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_play));
   btn_pause_.signal_clicked().connect(
       sigc::mem_fun(*this, &MainWindow::on_pause));

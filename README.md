@@ -8,7 +8,7 @@ Third-party software written to live on that desktop: XFCE, XLibre, Clearlooks c
 
 LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLunduke/LCOS)
 
-Current release: **[0.1.2](https://github.com/gmgauthier/earblaster/releases/tag/v0.1.2)** (2026-09-09).
+Current release: **[0.1.3](https://github.com/gmgauthier/earblaster/releases/tag/v0.1.3)** (2026-09-09).
 
 ## What it is
 
@@ -31,7 +31,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M0–M6 are in the tree.** Window, spin, sound, playlist, cover, EQ/prefs/keyboard, and packaging (`debian/`, `scripts/release.sh`). Tagged **0.1.2** (AppImage uses only bundled GStreamer; do not mix with the host).
+**M0–M6 are in the tree.** Window, spin, sound, playlist, cover, EQ/prefs/keyboard, and packaging (`debian/`, `scripts/release.sh`). Tagged **0.1.3** (AppImage uses only bundled GStreamer; do not mix with the host).
 
 The development plan called v1.0 “M0 through M6.” That feature set is what 0.1.x ships. A later tag can be named 1.0 when the package has lived on an LCOS box for a bit.
 
@@ -48,7 +48,7 @@ Not in this release (parked in DEVELOPMENT.md): spectrum ring, playlist cover co
 Preferred on LCOS / Devuan / Debian — a release `.deb`:
 
 ```
-sudo apt install ./earblaster_0.1.2-1_amd64.deb
+sudo apt install ./earblaster_0.1.3-1_amd64.deb
 ```
 
 Assets live on the [Releases](https://github.com/gmgauthier/earblaster/releases) page. AppImage and source tarball are documented in [INSTALL.md](INSTALL.md). Config is `~/.config/earblaster/earblaster.ini`.
@@ -60,14 +60,14 @@ The AppImage **bundles** libgstreamer and plugins from the Debian build host. On
 **Normal run** — the AppImage runtime sets `APPDIR` for you:
 
 ```
-chmod +x EarBlaster-0.1.2-x86_64.AppImage
-./EarBlaster-0.1.2-x86_64.AppImage
+chmod +x EarBlaster-0.1.3-x86_64.AppImage
+./EarBlaster-0.1.3-x86_64.AppImage
 ```
 
 **Extracted tree** — if you unpack it (`--appimage-extract`), you must set `APPDIR` to that tree or GStreamer will use the host and you can hit the same mismatch:
 
 ```
-./EarBlaster-0.1.2-x86_64.AppImage --appimage-extract
+./EarBlaster-0.1.3-x86_64.AppImage --appimage-extract
 export APPDIR="$PWD/squashfs-root"
 "$APPDIR/AppRun"
 # or: "$APPDIR/usr/bin/earblaster"

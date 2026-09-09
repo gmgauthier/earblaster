@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '0.1.2',
+  version: '0.1.3',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -57,6 +57,11 @@ install_data(
 
 install_data(
   'data/skin/lcos/lcos.css',
+  'data/skin/lcos/btn-prev.svg',
+  'data/skin/lcos/btn-play.svg',
+  'data/skin/lcos/btn-pause.svg',
+  'data/skin/lcos/btn-stop.svg',
+  'data/skin/lcos/btn-next.svg',
   install_dir: get_option('datadir') / 'earblaster' / 'skin' / 'lcos',
 )
 
