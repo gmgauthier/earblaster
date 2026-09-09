@@ -9,7 +9,7 @@ Four ways to get a binary, in the order LCOS cares about:
 | **AppImage** | Fallback when you cannot install packages. Needs host GStreamer codecs. |
 | **Git build** | Developers. See below. |
 
-Version comes from `meson.build` (currently `0.1.1`).
+Version comes from `meson.build` (currently `0.1.2`).
 
 ## Runtime needs (all installs except a fully bundled AppImage)
 
@@ -36,14 +36,14 @@ sudo apt install \
 From a release `.deb`:
 
 ```
-sudo apt install ./dist/earblaster_0.1.1-1_amd64.deb
+sudo apt install ./dist/earblaster_0.1.2-1_amd64.deb
 ```
 
 Or, from this tree:
 
 ```
 ./scripts/release.sh deb
-sudo apt install ./dist/earblaster_0.1.1-1_amd64.deb
+sudo apt install ./dist/earblaster_0.1.2-1_amd64.deb
 ```
 
 That installs:
@@ -63,8 +63,8 @@ Uninstall: `sudo apt remove earblaster`.
 `meson dist` produces `build/meson-dist/earblaster-VERSION.tar.xz` (demo audio under `data/samples/` is git-only, not in the tarball).
 
 ```
-tar -xf earblaster-0.1.1.tar.xz
-cd earblaster-0.1.1
+tar -xf earblaster-0.1.2.tar.xz
+cd earblaster-0.1.2
 sudo apt install build-essential meson ninja-build pkg-config \
   libgtkmm-3.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   libtag-dev
@@ -77,7 +77,7 @@ sudo meson install -C build
 
 ## 3. AppImage (fallback)
 
-LCOS 0.3 already runs AppImages. The image **bundles GStreamer plugins from the build host** (including playbin). If a codec is still missing, install the matching plugin package on the host as a fallback.
+LCOS 0.3 already runs AppImages. The image **bundles GStreamer from the build host** (libgstreamer + plugins, including playbin). It does **not** load the host's plugins: mixing Debian's libgstreamer with Arch's `libgstplayback.so` fails (`undefined symbol: gst_log_context_get_category`). Codecs are whatever was on the build machine.
 
 ```
 ./scripts/release.sh appimage
@@ -92,7 +92,7 @@ chmod +x EarBlaster-*.AppImage
 ./EarBlaster-*.AppImage
 ```
 
-If a format still fails, install the GStreamer plugin packages above on the host (the AppImage also searches those paths).
+If a format is missing, that codec was not on the build host; use the `.deb` on Debian/LCOS or a native build on Arch.
 
 ## 4. Developer build (no install)
 

@@ -9,8 +9,10 @@
 
 namespace {
 
-/* AppImage ships libgstreamer but playbin lives in a plugin. Point GST at
- * bundled plugins, then the host, before gst_init. */
+/* AppImage ships libgstreamer *and* plugins. Mixing those with the host's
+ * plugins (Arch vs Debian) loads e.g. host libgstplayback.so against the
+ * bundled libgstreamer and fails (undefined symbol). Use only APPDIR
+ * plugins and a private registry, never ~/.cache from a native GST. */
 void setup_gst_plugin_path()
 {
   const char* appdir = g_getenv("APPDIR");
@@ -30,20 +32,11 @@ void setup_gst_plugin_path()
       break;
     }
   }
-  const char* host[] = {
-      "/usr/lib/x86_64-linux-gnu/gstreamer-1.0",
-      "/usr/lib/aarch64-linux-gnu/gstreamer-1.0",
-      "/usr/lib/gstreamer-1.0",
-      nullptr};
-  for (int i = 0; host[i]; ++i) {
-    if (!g_file_test(host[i], G_FILE_TEST_IS_DIR))
-      continue;
-    if (!path.empty())
-      path += ":";
-    path += host[i];
-  }
   if (path.empty())
     return;
+
+  g_unsetenv("GST_PLUGIN_PATH");
+  g_unsetenv("GST_PLUGIN_SYSTEM_PATH");
   g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", path.c_str(), TRUE);
   g_setenv("GST_PLUGIN_PATH_1_0", path.c_str(), TRUE);
 
@@ -51,6 +44,12 @@ void setup_gst_plugin_path()
       std::string(appdir) + "/usr/lib/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner";
   if (g_file_test(scanner.c_str(), G_FILE_TEST_IS_EXECUTABLE))
     g_setenv("GST_PLUGIN_SCANNER_1_0", scanner.c_str(), TRUE);
+
+  const std::string cache =
+      std::string(g_get_user_cache_dir()) + "/gstreamer-1.0";
+  g_mkdir_with_parents(cache.c_str(), 0700);
+  const std::string registry = cache + "/earblaster-appimage.bin";
+  g_setenv("GST_REGISTRY_1_0", registry.c_str(), TRUE);
 }
 
 }  // namespace

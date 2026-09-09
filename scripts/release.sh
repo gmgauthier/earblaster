@@ -84,7 +84,7 @@ do_appimage() {
       export PATH="${ROOT}/scripts:${PATH}"
     fi
   fi
-  # GStreamer plugins stay on the host; see INSTALL.md.
+  # Plugins are copied into AppDir above; do not rely on the host GST.
   # shellcheck disable=SC2086
   linuxdeploy --appdir "$APPDIR" \
     --executable "${APPDIR}/usr/bin/earblaster" \
