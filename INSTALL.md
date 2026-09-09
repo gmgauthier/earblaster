@@ -85,14 +85,22 @@ LCOS 0.3 already runs AppImages. The image **bundles GStreamer from the build ho
 
 Requires `linuxdeploy` on `$PATH` (see <https://github.com/linuxdeploy/linuxdeploy>). Output: `dist/EarBlaster-VERSION-x86_64.AppImage`.
 
-Mark executable and run:
+Mark executable and run. The AppImage runtime sets `APPDIR` to the mounted image; EarBlaster then uses **only** `$APPDIR/usr/lib/gstreamer-1.0` and a private registry (`~/.cache/gstreamer-1.0/earblaster-appimage.bin`).
 
 ```
 chmod +x EarBlaster-*.AppImage
 ./EarBlaster-*.AppImage
 ```
 
-If a format is missing, that codec was not on the build host; use the `.deb` on Debian/LCOS or a native build on Arch.
+If you extract the image, set `APPDIR` yourself or host plugins will mix with the bundled libgstreamer:
+
+```
+./EarBlaster-*.AppImage --appimage-extract
+export APPDIR="$PWD/squashfs-root"
+"$APPDIR/AppRun"
+```
+
+Leave `APPDIR` unset for `.deb` and `meson install` builds. If a format is missing, that codec was not on the build host; use the `.deb` on Debian/LCOS or a native build on Arch.
 
 ## 4. Developer build (no install)
 
