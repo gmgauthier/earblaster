@@ -9,7 +9,7 @@ Four ways to get a binary, in the order LCOS cares about:
 | **AppImage** | Fallback when you cannot install packages. Needs host GStreamer codecs. |
 | **Git build** | Developers. See below. |
 
-Version comes from `meson.build` (currently `0.1.0`).
+Version comes from `meson.build` (currently `0.1.1`).
 
 ## Runtime needs (all installs except a fully bundled AppImage)
 
@@ -36,14 +36,14 @@ sudo apt install \
 From a release `.deb`:
 
 ```
-sudo apt install ./dist/earblaster_0.1.0-2_amd64.deb
+sudo apt install ./dist/earblaster_0.1.1-1_amd64.deb
 ```
 
 Or, from this tree:
 
 ```
 ./scripts/release.sh deb
-sudo apt install ./dist/earblaster_0.1.0-2_amd64.deb
+sudo apt install ./dist/earblaster_0.1.1-1_amd64.deb
 ```
 
 That installs:
@@ -63,8 +63,8 @@ Uninstall: `sudo apt remove earblaster`.
 `meson dist` produces `build/meson-dist/earblaster-VERSION.tar.xz` (demo audio under `data/samples/` is git-only, not in the tarball).
 
 ```
-tar -xf earblaster-0.1.0.tar.xz
-cd earblaster-0.1.0
+tar -xf earblaster-0.1.1.tar.xz
+cd earblaster-0.1.1
 sudo apt install build-essential meson ninja-build pkg-config \
   libgtkmm-3.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   libtag-dev
@@ -77,7 +77,7 @@ sudo meson install -C build
 
 ## 3. AppImage (fallback)
 
-LCOS 0.3 already runs AppImages. The AppImage still **uses the host GStreamer plugins** so MP3/etc. stay with the distro. It is not a fully self-contained codec bundle (that would ship ffmpeg/libav and become huge).
+LCOS 0.3 already runs AppImages. The image **bundles GStreamer plugins from the build host** (including playbin). If a codec is still missing, install the matching plugin package on the host as a fallback.
 
 ```
 ./scripts/release.sh appimage
@@ -92,7 +92,7 @@ chmod +x EarBlaster-*.AppImage
 ./EarBlaster-*.AppImage
 ```
 
-If playback has no codecs, install the GStreamer plugin packages above on the host.
+If a format still fails, install the GStreamer plugin packages above on the host (the AppImage also searches those paths).
 
 ## 4. Developer build (no install)
 

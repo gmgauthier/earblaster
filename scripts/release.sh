@@ -62,6 +62,18 @@ do_appimage() {
   meson setup "${ROOT}/build-appimage" "$ROOT" --prefix=/usr
   meson compile -C "${ROOT}/build-appimage"
   DESTDIR="$APPDIR" meson install -C "${ROOT}/build-appimage"
+  # playbin is a GStreamer *plugin*, not a link dependency. Copy plugins
+  # (and the scanner) into the AppDir so the image can actually play.
+  GST_PLUGINS=$(pkg-config --variable=pluginsdir gstreamer-1.0)
+  if [ -n "$GST_PLUGINS" ] && [ -d "$GST_PLUGINS" ]; then
+    mkdir -p "${APPDIR}/usr/lib/gstreamer-1.0"
+    cp -a "${GST_PLUGINS}"/*.so "${APPDIR}/usr/lib/gstreamer-1.0/" 2>/dev/null || true
+  fi
+  SCANNER=$(ls /usr/lib/*/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner 2>/dev/null | head -1)
+  if [ -n "$SCANNER" ] && [ -x "$SCANNER" ]; then
+    mkdir -p "${APPDIR}/usr/lib/gstreamer1.0/gstreamer-1.0"
+    cp -a "$SCANNER" "${APPDIR}/usr/lib/gstreamer1.0/gstreamer-1.0/"
+  fi
   export LINUXDEPLOY_OUTPUT_VERSION="$VERSION"
   export APPIMAGE_EXTRACT_AND_RUN=1
   PLUGIN_ARGS=""

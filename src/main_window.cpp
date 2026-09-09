@@ -294,6 +294,8 @@ void MainWindow::build_body()
 
   std::vector<Gtk::TargetEntry> targets = {
       Gtk::TargetEntry("text/uri-list", Gtk::TargetFlags(0), 0)};
+  /* Timestamp-guard the handler: GTK3 TreeView + DEST_DEFAULT_ALL can
+     emit drag-data-received twice for one file-manager drop. */
   playlist_view_.drag_dest_set(targets, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_COPY);
   playlist_view_.signal_drag_data_received().connect(
       sigc::mem_fun(*this, &MainWindow::on_drag_data_received));
@@ -774,7 +776,17 @@ void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx
                                        int, int, const Gtk::SelectionData& data,
                                        guint, guint time)
 {
-  const int n = playlist_.add_dropped(data.get_uris());
+  if (time != 0 && time == last_drop_time_) {
+    ctx->drag_finish(false, false, time);
+    return;
+  }
+  last_drop_time_ = time;
+  auto uris = data.get_uris();
+  if (uris.empty()) {
+    ctx->drag_finish(false, false, time);
+    return;
+  }
+  const int n = playlist_.add_dropped(uris);
   ctx->drag_finish(n > 0, false, time);
   if (n <= 0)
     set_status("Nothing playable in that drop.");

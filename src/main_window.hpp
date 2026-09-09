@@ -100,6 +100,7 @@ class MainWindow : public Gtk::Window {
   std::unique_ptr<EqWindow> eq_win_;
   bool seek_dragging_ = false;
   bool have_local_cover_ = false;
+  guint last_drop_time_ = 0;
   Gtk::CheckMenuItem* shuffle_item_ = nullptr;
   Gtk::CheckMenuItem* repeat_item_ = nullptr;
 };
