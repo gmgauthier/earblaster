@@ -1,5 +1,7 @@
 # EarBlaster
 
+**Vended by Grok Build**
+
 A media player **for The Lunduke Computer Operating System (LCOS)**.
 
 ![EarBlaster on LCOS](brand/screenshot-playback.png)
