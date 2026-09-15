@@ -1,3 +1,10 @@
+earblaster (0.2.0-1) unstable; urgency=medium
+
+  * Thunar Open with for MP3, Ogg, and the other audio types we already play.
+    Exec takes files (%F); a second instance uses a Unix socket, not D-Bus.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Tue, 15 Sep 2026 22:10:00 +0100
+
 earblaster (0.1.3-1) unstable; urgency=medium
 
   * Transport buttons use small navy SVG icons instead of ASCII.

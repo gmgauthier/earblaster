@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '0.1.3',
+  version: '0.2.0',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
