@@ -105,6 +105,7 @@ Playlist::Playlist()
 
 Playlist::~Playlist()
 {
+  meta_idle_.disconnect();
   meta_queue_.clear();
   if (discoverer_) {
     gst_discoverer_stop(discoverer_);
@@ -115,7 +116,9 @@ Playlist::~Playlist()
 
 void Playlist::clear()
 {
+  meta_idle_.disconnect();
   meta_queue_.clear();
+  discovering_ = false;
   store_->clear();
   current_ = Gtk::TreeRowReference();
   history_.clear();
@@ -171,6 +174,7 @@ void Playlist::set_current(int index)
   Gtk::TreeModel::Path path;
   path.push_back(static_cast<unsigned>(index));
   current_ = Gtk::TreeRowReference(store_, path);
+  schedule_meta();
 }
 
 void Playlist::set_current(const Gtk::TreeModel::Path& path)
@@ -180,6 +184,7 @@ void Playlist::set_current(const Gtk::TreeModel::Path& path)
     return;
   }
   current_ = Gtk::TreeRowReference(store_, path);
+  schedule_meta();
 }
 
 int Playlist::append_uri(const std::string& uri, const Glib::ustring& title)
@@ -201,7 +206,17 @@ void Playlist::enqueue_meta(const std::string& uri)
   if (uri.empty())
     return;
   meta_queue_.push_back(uri);
-  pump_meta();
+  schedule_meta();
+}
+
+void Playlist::schedule_meta()
+{
+  if (meta_idle_.connected())
+    return;
+  meta_idle_ = Glib::signal_idle().connect([this]() {
+    pump_meta();
+    return false;
+  });
 }
 
 bool Playlist::ensure_discoverer()
@@ -225,13 +240,26 @@ void Playlist::pump_meta()
 {
   if (discovering_ || meta_queue_.empty())
     return;
+  /* Do not discover the URI playbin is using. Opening the same file twice
+   * (especially a large track on SMB/CIFS) stalls playback. */
+  const std::string playing = current_uri();
+  std::string uri;
+  if (!playing.empty()) {
+    auto it = std::find_if(meta_queue_.begin(), meta_queue_.end(),
+                           [&](const std::string& u) { return u != playing; });
+    if (it == meta_queue_.end())
+      return;
+    uri = *it;
+    meta_queue_.erase(it);
+  } else {
+    uri = meta_queue_.front();
+    meta_queue_.pop_front();
+  }
   if (!ensure_discoverer()) {
     meta_queue_.clear();
     return;
   }
   discovering_ = true;
-  const std::string uri = meta_queue_.front();
-  meta_queue_.pop_front();
   gst_discoverer_discover_uri_async(discoverer_, uri.c_str());
 }
 
@@ -354,9 +382,29 @@ int Playlist::add_m3u(const std::string& path)
     line = trim(line);
     if (line.empty() || line[0] == '#')
       continue;
+    if (line.size() >= 2 && ((line.front() == '"' && line.back() == '"') ||
+                             (line.front() == '\'' && line.back() == '\'')))
+      line = trim(line.substr(1, line.size() - 2));
+    if (line.compare(0, 7, "http://") == 0 || line.compare(0, 8, "https://") == 0)
+      continue;
+    if (line.find("://") != std::string::npos) {
+      GError* err = nullptr;
+      gchar* local = g_filename_from_uri(line.c_str(), nullptr, &err);
+      if (!local) {
+        if (err)
+          g_error_free(err);
+        continue;
+      }
+      line = local;
+      g_free(local);
+    }
     fs::path item(line);
     if (item.is_relative())
       item = base / item;
+    std::error_code ec;
+    const fs::path canon = fs::weakly_canonical(item, ec);
+    if (!ec)
+      item = canon;
     n += add_audio_file(item.string());
   }
   return n;
