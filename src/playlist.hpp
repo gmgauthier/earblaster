@@ -40,12 +40,21 @@ class Playlist {
   Playlist(const Playlist&) = delete;
   Playlist& operator=(const Playlist&) = delete;
 
-  Glib::RefPtr<Gtk::ListStore> store() const { return store_; }
-  const Columns& columns() const { return columns_; }
+  Glib::RefPtr<Gtk::ListStore> store() const
+  {
+    return store_;
+  }
+  const Columns& columns() const
+  {
+    return columns_;
+  }
 
   void clear();
   int size() const;
-  bool empty() const { return size() == 0; }
+  bool empty() const
+  {
+    return size() == 0;
+  }
 
   int current_index() const;
   std::string current_uri() const;
@@ -64,9 +73,15 @@ class Playlist {
   bool next();
   bool prev();
 
-  bool shuffle() const { return shuffle_; }
+  bool shuffle() const
+  {
+    return shuffle_;
+  }
   void set_shuffle(bool shuffle);
-  Repeat repeat() const { return repeat_; }
+  Repeat repeat() const
+  {
+    return repeat_;
+  }
   void set_repeat(Repeat repeat);
 
   void update_current_meta(const Glib::ustring& title, const Glib::ustring& artist,

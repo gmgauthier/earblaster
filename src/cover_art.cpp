@@ -99,12 +99,10 @@ Glib::RefPtr<Gdk::Pixbuf> from_taglib(const std::string& path)
 
 bool is_sidecar_name(const std::string& lower)
 {
-  static const char* names[] = {
-      "folder.jpg",    "folder.jpeg", "folder.png", "folder.webp",
-      "cover.jpg",     "cover.jpeg",  "cover.png",  "cover.webp",
-      "albumart.jpg",  "albumart.jpeg", "albumart.png",
-      "front.jpg",     "front.jpeg",  "front.png",
-      nullptr};
+  static const char* names[] = {"folder.jpg",   "folder.jpeg",   "folder.png",   "folder.webp",
+                                "cover.jpg",    "cover.jpeg",    "cover.png",    "cover.webp",
+                                "albumart.jpg", "albumart.jpeg", "albumart.png", "front.jpg",
+                                "front.jpeg",   "front.png",     nullptr};
   for (int i = 0; names[i]; ++i) {
     if (lower == names[i])
       return true;

@@ -20,11 +20,8 @@ void setup_gst_plugin_path()
     return;
 
   std::string path;
-  const char* bundled[] = {
-      "/usr/lib/gstreamer-1.0",
-      "/usr/lib/x86_64-linux-gnu/gstreamer-1.0",
-      "/usr/lib/aarch64-linux-gnu/gstreamer-1.0",
-      nullptr};
+  const char* bundled[] = {"/usr/lib/gstreamer-1.0", "/usr/lib/x86_64-linux-gnu/gstreamer-1.0",
+                           "/usr/lib/aarch64-linux-gnu/gstreamer-1.0", nullptr};
   for (int i = 0; bundled[i]; ++i) {
     const std::string cand = std::string(appdir) + bundled[i];
     if (g_file_test(cand.c_str(), G_FILE_TEST_IS_DIR)) {
@@ -45,8 +42,7 @@ void setup_gst_plugin_path()
   if (g_file_test(scanner.c_str(), G_FILE_TEST_IS_EXECUTABLE))
     g_setenv("GST_PLUGIN_SCANNER_1_0", scanner.c_str(), TRUE);
 
-  const std::string cache =
-      std::string(g_get_user_cache_dir()) + "/gstreamer-1.0";
+  const std::string cache = std::string(g_get_user_cache_dir()) + "/gstreamer-1.0";
   g_mkdir_with_parents(cache.c_str(), 0700);
   const std::string registry = cache + "/earblaster-appimage.bin";
   g_setenv("GST_REGISTRY_1_0", registry.c_str(), TRUE);

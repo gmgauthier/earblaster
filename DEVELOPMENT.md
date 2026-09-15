@@ -41,7 +41,7 @@ Next work is post-v1.0 (see §9), not another milestone in this sequence.
 | Init / session | No systemd dependency. ALSA or Pulse via playbin. MPRIS optional later |
 | License | The Unlicense |
 | Playlist verbs | Two commands, never mixed. **New** = replace the list and start the first (or only) row now. **Add** = append to the list and do not change transport. “Play” is transport only (`>`, Play menu). |
-| Versioning | `meson.build` is the source of truth (`0.1.1`). Debian changelog tracks the same upstream version. |
+| Versioning | Semantic (`MAJOR.MINOR.PATCH`). `meson.build` is the source of truth. Debian changelog and git tag `vX.Y.Z` match it. See **Process**. |
 
 ## 2. Window
 
@@ -321,3 +321,44 @@ Small packaging nits, not a milestone:
 - Live-test the `.deb` on LCOS 0.3, then consider tag `v1.0.0`
 
 Product work after that is the parked list in §5, or the next LCOS-only app (Cardfile) — not more EarBlaster scope unless a bug shows up on the target desktop.
+
+## Process
+
+Do not commit to `master`. Every change lands through a pull request.
+
+### Branches
+
+- `feature/<short-name>` — new user-visible work
+- `fix/<short-name>` — bugs, packaging nits, regressions
+
+Open a pull request into `master`. Merge only after review.
+
+### Gates
+
+A pull request must pass **lint** before merge. CI runs `./scripts/lint.sh` (no `--fix`). Locally:
+
+- `./scripts/lint.sh --fix` — clang-format rewrites `src/`
+- `./scripts/lint.sh` — SPDX headers, no tabs, clang-format `--dry-run --Werror`, cppcheck (`warning`) on `src/`
+- `meson compile` with this tree’s `warning_level=2` is clean (no new warnings)
+
+Do not pass `--fix` in CI. Do not merge a red PR.
+
+**Tests** are required when they exist (`meson test -C build`). Until a test suite lands, the gate is lint plus a clean compile plus a manual pass of the change.
+
+### Semantic versioning
+
+Every **shipped** pull request — merged to `master` and tagged as a release — bumps the version. `meson.build` is the source of truth. Keep these in lockstep in the same PR:
+
+- `meson.build` `version:`
+- `debian/changelog` (new stanza)
+- git tag `vMAJOR.MINOR.PATCH` after merge
+
+Then `./scripts/release.sh` produces `.deb`, tarball, and AppImage.
+
+| Bump | When |
+|---|---|
+| **PATCH** (`x.y.Z`) | Bug fix or packaging. No new user-facing feature. |
+| **MINOR** (`x.Y.0`) | New backward-compatible feature. |
+| **MAJOR** (`X.0.0`) | Breaking change: native file format, dropped config keys, removed UI users rely on. |
+
+While the version is `0.y.z`, still bump MINOR and PATCH this way. Do not treat 0.x as a free-for-all. The Debian revision (`-1`, `-2`) is only for rebuilding the same upstream version with no source change.

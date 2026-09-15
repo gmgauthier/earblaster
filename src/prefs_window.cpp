@@ -8,7 +8,8 @@
 namespace earblaster {
 
 PrefsWindow::PrefsWindow(Gtk::Window& parent, Settings& settings)
-    : Gtk::Dialog("Preferences", parent, true), settings_(settings)
+    : Gtk::Dialog("Preferences", parent, true),
+      settings_(settings)
 {
   set_border_width(8);
   set_resizable(false);
