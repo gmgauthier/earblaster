@@ -83,6 +83,65 @@ Glib::ustring format_duration(gint64 ns)
   return buf;
 }
 
+const char* kAltExt[] = {"ogg", "oga", "mp3", "flac", "wav", "m4a", "aac", "opus", nullptr};
+
+std::string leading_track(const std::string& name)
+{
+  size_t i = 0;
+  while (i < name.size() && std::isdigit(static_cast<unsigned char>(name[i])))
+    ++i;
+  if (i == 0)
+    return {};
+  return name.substr(0, i);
+}
+
+/* Map an M3U line to a file that exists: exact path, same stem with another
+ * audio extension, or a unique leading-track-number match in the same folder. */
+std::string resolve_existing_audio(fs::path item)
+{
+  std::error_code ec;
+  if (fs::is_regular_file(item, ec) && Playlist::is_audio_path(item.string()))
+    return item.string();
+
+  const fs::path dir = item.parent_path();
+  const std::string stem = item.stem().string();
+  if (!dir.empty() && !stem.empty()) {
+    for (int i = 0; kAltExt[i]; ++i) {
+      const fs::path cand = dir / (stem + "." + kAltExt[i]);
+      if (fs::is_regular_file(cand, ec))
+        return cand.string();
+    }
+  }
+
+  const std::string prefix = leading_track(item.filename().string());
+  if (prefix.empty() || dir.empty())
+    return {};
+  std::vector<fs::path> hits;
+  fs::directory_iterator it(dir, ec);
+  if (ec)
+    return {};
+  for (; it != fs::directory_iterator(); it.increment(ec)) {
+    if (ec) {
+      ec.clear();
+      continue;
+    }
+    if (!it->is_regular_file(ec))
+      continue;
+    const fs::path p = it->path();
+    if (!Playlist::is_audio_path(p.string()))
+      continue;
+    const std::string name = p.filename().string();
+    if (name.size() <= prefix.size() || name.compare(0, prefix.size(), prefix) != 0)
+      continue;
+    if (std::isdigit(static_cast<unsigned char>(name[prefix.size()])))
+      continue;
+    hits.push_back(p);
+  }
+  if (hits.size() == 1)
+    return hits[0].string();
+  return {};
+}
+
 }  // namespace
 
 bool Playlist::is_audio_path(const std::string& path)
@@ -405,8 +464,13 @@ int Playlist::add_m3u(const std::string& path)
     const fs::path canon = fs::weakly_canonical(item, ec);
     if (!ec)
       item = canon;
-    n += add_audio_file(item.string());
+    const std::string resolved = resolve_existing_audio(item);
+    if (resolved.empty())
+      continue;
+    n += add_audio_file(resolved);
   }
+  if (n == 0 && !base.empty())
+    n += add_folder(base.string());
   return n;
 }
 
