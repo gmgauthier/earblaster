@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v0.2.0**. Last updated: 2026-09-15.
+Current release: **v0.2.1**. Last updated: 2026-09-15.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -42,3 +42,5 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 **v0.1.3** — Navy SVG transport buttons (replaces ASCII). Lived with on LCOS 0.3, 0.4, and 0.5.
 
 **v0.2.0** — XFCE/Thunar Open with (MimeType + `Exec=%F`). Cold start reads argv as **New**. Second instance uses `$XDG_RUNTIME_DIR/earblaster.sock` (no D-Bus, no systemd). Video types stay with VLC.
+
+**v0.2.1** — Stale album M3Us play: missing `.ogg` entries resolve to existing files (extension swap or unique leading track number); GstDiscoverer does not open the URI playbin is using.
