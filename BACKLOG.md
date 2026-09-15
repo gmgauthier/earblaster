@@ -1,13 +1,13 @@
 # EarBlaster backlog
 
-Current release: **v0.1.3**. Last updated: 2026-09-15.
+Current release: **v0.2.0**. Last updated: 2026-09-15.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-- **XFCE “Open with” / default audio handler.** Right-click an MP3 or Ogg in Thunar and Open with EarBlaster; optionally make it the default for those types on LCOS. Today `earblaster.desktop` has no `MimeType=` and `Exec=` takes no files; argv is ignored. Need: `MimeType` for the audio types we already play (at least `audio/mpeg`, `audio/ogg`, plus FLAC / WAV / M4A); `Exec=earblaster %F`; cold start reads those paths from argv and treats them as **New** (replace + start). **No D-Bus, no systemd, no `APPLICATION_HANDLES_OPEN`.** Single-instance stays the flock. If already running, the second process writes the paths to a Unix socket next to the lock file (`$XDG_RUNTIME_DIR/earblaster.sock`) and exits; the primary watches that socket and does **New**. Do not steal video types (VLC stays the generic player). Then consider tag `v1.0.0`.
 - Point `debian/control` Homepage / Vcs-* at the public clone when packaging is touched next. Origin stays Gitea; GitHub is the mirror.
+- After Open with has been lived with on LCOS 0.5, consider tag `v1.0.0`.
 
 ## Low Priority
 
@@ -39,4 +39,6 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 
 **v0.1.2** — AppImage uses only bundled plugins and a private registry.
 
-**v0.1.3** — Navy SVG transport buttons (replaces ASCII). Lived with on LCOS 0.3, 0.4, and 0.5. Tag `v1.0.0` waits on XFCE Open-with (High Priority).
+**v0.1.3** — Navy SVG transport buttons (replaces ASCII). Lived with on LCOS 0.3, 0.4, and 0.5.
+
+**v0.2.0** — XFCE/Thunar Open with (MimeType + `Exec=%F`). Cold start reads argv as **New**. Second instance uses `$XDG_RUNTIME_DIR/earblaster.sock` (no D-Bus, no systemd). Video types stay with VLC.
