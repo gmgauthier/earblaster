@@ -13,8 +13,7 @@
 namespace earblaster {
 namespace {
 
-Gtk::MenuItem* add_item(Gtk::Menu& menu, const Glib::ustring& label,
-                        const sigc::slot<void()>& slot)
+Gtk::MenuItem* add_item(Gtk::Menu& menu, const Glib::ustring& label, const sigc::slot<void()>& slot)
 {
   auto* item = Gtk::manage(new Gtk::MenuItem(label, true));
   item->signal_activate().connect(slot);
@@ -84,21 +83,16 @@ MainWindow::MainWindow()
   build_menu();
   build_body();
 
-  player_.signal_state_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::on_player_state));
-  player_.signal_position_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::on_player_position));
-  player_.signal_error().connect(
-      sigc::mem_fun(*this, &MainWindow::on_player_error));
-  player_.signal_cover().connect(
-      sigc::mem_fun(*this, &MainWindow::on_player_cover));
+  player_.signal_state_changed().connect(sigc::mem_fun(*this, &MainWindow::on_player_state));
+  player_.signal_position_changed().connect(sigc::mem_fun(*this, &MainWindow::on_player_position));
+  player_.signal_error().connect(sigc::mem_fun(*this, &MainWindow::on_player_error));
+  player_.signal_cover().connect(sigc::mem_fun(*this, &MainWindow::on_player_cover));
   player_.signal_eos().connect(sigc::mem_fun(*this, &MainWindow::on_eos));
   player_.signal_tags().connect(sigc::mem_fun(*this, &MainWindow::on_player_tags));
 
   volume_.set_value(settings_.volume);
   player_.set_volume(settings_.volume);
-  volume_.signal_value_changed().connect(
-      sigc::mem_fun(*this, &MainWindow::on_volume_changed));
+  volume_.signal_value_changed().connect(sigc::mem_fun(*this, &MainWindow::on_volume_changed));
   for (int i = 0; i < Settings::kEqBands; ++i)
     player_.set_eq_band(i, settings_.eq[i]);
   if (shuffle_item_)
@@ -107,8 +101,7 @@ MainWindow::MainWindow()
     repeat_item_->set_active(settings_.repeat);
 
   add_events(Gdk::KEY_PRESS_MASK);
-  signal_key_press_event().connect(sigc::mem_fun(*this, &MainWindow::on_key_press),
-                                   false);
+  signal_key_press_event().connect(sigc::mem_fun(*this, &MainWindow::on_key_press), false);
   signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::on_window_delete));
   signal_hide().connect(sigc::mem_fun(*this, &MainWindow::persist));
 
@@ -136,8 +129,8 @@ void MainWindow::load_css()
   try {
     auto css = Gtk::CssProvider::create();
     css->load_from_path(css_path);
-    Gtk::StyleContext::add_provider_for_screen(
-        Gdk::Screen::get_default(), css, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    Gtk::StyleContext::add_provider_for_screen(Gdk::Screen::get_default(), css,
+                                               GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   } catch (const Glib::Error& e) {
     std::cerr << "earblaster: CSS: " << e.what() << "\n";
   }
@@ -165,16 +158,13 @@ void MainWindow::build_menu()
   auto* file = Gtk::manage(new Gtk::Menu());
   add_item(*file, "_New File…", sigc::mem_fun(*this, &MainWindow::on_new_file));
   add_item(*file, "New _Folder…", sigc::mem_fun(*this, &MainWindow::on_new_folder));
-  add_item(*file, "New P_laylist…",
-           sigc::mem_fun(*this, &MainWindow::on_new_playlist));
+  add_item(*file, "New P_laylist…", sigc::mem_fun(*this, &MainWindow::on_new_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "_Add File…", sigc::mem_fun(*this, &MainWindow::on_add_file));
   add_item(*file, "Add Fol_der…", sigc::mem_fun(*this, &MainWindow::on_add_folder));
-  add_item(*file, "Add Playlis_t…",
-           sigc::mem_fun(*this, &MainWindow::on_add_playlist));
+  add_item(*file, "Add Playlis_t…", sigc::mem_fun(*this, &MainWindow::on_add_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
-  add_item(*file, "_Save Playlist…",
-           sigc::mem_fun(*this, &MainWindow::on_save_playlist));
+  add_item(*file, "_Save Playlist…", sigc::mem_fun(*this, &MainWindow::on_save_playlist));
   file->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*file, "_Quit", sigc::mem_fun(*this, &MainWindow::on_quit));
   add_menu("_File", *file);
@@ -182,31 +172,26 @@ void MainWindow::build_menu()
   auto* edit = Gtk::manage(new Gtk::Menu());
   add_item(*edit, "_Remove", sigc::mem_fun(*this, &MainWindow::on_remove_rows));
   edit->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
-  add_item(*edit, "_Preferences…",
-           sigc::mem_fun(*this, &MainWindow::on_preferences));
+  add_item(*edit, "_Preferences…", sigc::mem_fun(*this, &MainWindow::on_preferences));
   add_menu("_Edit", *edit);
 
   auto* view = Gtk::manage(new Gtk::Menu());
   add_item(*view, "_Playlist",
-           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet),
-                      Glib::ustring("View")));
+           sigc::bind(sigc::mem_fun(*this, &MainWindow::on_not_yet), Glib::ustring("View")));
   add_menu("_View", *view);
 
   auto* play = Gtk::manage(new Gtk::Menu());
-  add_item(*play, "_Play / Pause",
-           sigc::mem_fun(*this, &MainWindow::on_play_pause));
+  add_item(*play, "_Play / Pause", sigc::mem_fun(*this, &MainWindow::on_play_pause));
   add_item(*play, "_Stop", sigc::mem_fun(*this, &MainWindow::on_stop));
   play->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   add_item(*play, "P_revious", sigc::mem_fun(*this, &MainWindow::on_prev));
   add_item(*play, "_Next", sigc::mem_fun(*this, &MainWindow::on_next));
   play->append(*Gtk::manage(new Gtk::SeparatorMenuItem()));
   shuffle_item_ = Gtk::manage(new Gtk::CheckMenuItem("Sh_uffle"));
-  shuffle_item_->signal_toggled().connect(
-      sigc::mem_fun(*this, &MainWindow::on_shuffle));
+  shuffle_item_->signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::on_shuffle));
   play->append(*shuffle_item_);
   repeat_item_ = Gtk::manage(new Gtk::CheckMenuItem("R_epeat"));
-  repeat_item_->signal_toggled().connect(
-      sigc::mem_fun(*this, &MainWindow::on_repeat));
+  repeat_item_->signal_toggled().connect(sigc::mem_fun(*this, &MainWindow::on_repeat));
   play->append(*repeat_item_);
   add_menu("_Play", *play);
 
@@ -251,8 +236,7 @@ void MainWindow::build_body()
   set_btn_icon(btn_stop_, "btn-stop.svg", "Stop");
   set_btn_icon(btn_next_, "btn-next.svg", "Next");
   btn_play_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_play));
-  btn_pause_.signal_clicked().connect(
-      sigc::mem_fun(*this, &MainWindow::on_pause));
+  btn_pause_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_pause));
   btn_stop_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_stop));
   btn_prev_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_prev));
   btn_next_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_next));
@@ -268,10 +252,10 @@ void MainWindow::build_body()
   seek_.set_draw_value(false);
   seek_.set_sensitive(false);
   seek_.set_margin_top(6);
-  seek_.signal_button_press_event().connect(
-      sigc::mem_fun(*this, &MainWindow::on_seek_press), false);
-  seek_.signal_button_release_event().connect(
-      sigc::mem_fun(*this, &MainWindow::on_seek_release), false);
+  seek_.signal_button_press_event().connect(sigc::mem_fun(*this, &MainWindow::on_seek_press),
+                                            false);
+  seek_.signal_button_release_event().connect(sigc::mem_fun(*this, &MainWindow::on_seek_release),
+                                              false);
   left_.pack_start(seek_label_, Gtk::PACK_SHRINK);
   left_.pack_start(seek_, Gtk::PACK_SHRINK);
 
@@ -338,11 +322,9 @@ void MainWindow::set_status(const Glib::ustring& text)
 
 std::string MainWindow::chooser_start_dir() const
 {
-  if (!settings_.music_dir.empty() &&
-      Glib::file_test(settings_.music_dir, Glib::FILE_TEST_IS_DIR))
+  if (!settings_.music_dir.empty() && Glib::file_test(settings_.music_dir, Glib::FILE_TEST_IS_DIR))
     return settings_.music_dir;
-  const std::string home_music =
-      Glib::build_filename(Glib::get_home_dir(), "Music");
+  const std::string home_music = Glib::build_filename(Glib::get_home_dir(), "Music");
   if (Glib::file_test(home_music, Glib::FILE_TEST_IS_DIR))
     return home_music;
   return Glib::get_home_dir();
@@ -381,8 +363,7 @@ std::string MainWindow::choose_folder(const Glib::ustring& title)
 std::string MainWindow::choose_m3u(bool save)
 {
   Gtk::FileChooserDialog dlg(*this, save ? "Save Playlist" : "Select Playlist",
-                             save ? Gtk::FILE_CHOOSER_ACTION_SAVE
-                                  : Gtk::FILE_CHOOSER_ACTION_OPEN);
+                             save ? Gtk::FILE_CHOOSER_ACTION_SAVE : Gtk::FILE_CHOOSER_ACTION_OPEN);
   dlg.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
   dlg.add_button(save ? "_Save" : "_Open", Gtk::RESPONSE_ACCEPT);
   add_m3u_filter(dlg);
@@ -609,12 +590,10 @@ void MainWindow::on_shuffle()
 void MainWindow::on_repeat()
 {
   settings_.repeat = repeat_item_ && repeat_item_->get_active();
-  playlist_.set_repeat(settings_.repeat ? Playlist::Repeat::All
-                                        : Playlist::Repeat::Off);
+  playlist_.set_repeat(settings_.repeat ? Playlist::Repeat::All : Playlist::Repeat::Off);
 }
 
-void MainWindow::on_row_activated(const Gtk::TreeModel::Path& path,
-                                  Gtk::TreeViewColumn*)
+void MainWindow::on_row_activated(const Gtk::TreeModel::Path& path, Gtk::TreeViewColumn*)
 {
   playlist_.set_current(path);
   play_current();
@@ -652,9 +631,8 @@ void MainWindow::sync_transport()
 
 void MainWindow::update_clock()
 {
-  set_status(Glib::ustring(state_word(player_.state())) + " — " +
-             format_clock(player_.position()) + " / " +
-             format_clock(player_.duration()));
+  set_status(Glib::ustring(state_word(player_.state())) + " — " + format_clock(player_.position()) +
+             " / " + format_clock(player_.duration()));
 }
 
 void MainWindow::on_player_state(Player::State state)
@@ -791,9 +769,8 @@ bool MainWindow::on_key_press(GdkEventKey* event)
   }
 }
 
-void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx,
-                                       int, int, const Gtk::SelectionData& data,
-                                       guint, guint time)
+void MainWindow::on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& ctx, int, int,
+                                       const Gtk::SelectionData& data, guint, guint time)
 {
   if (time != 0 && time == last_drop_time_) {
     ctx->drag_finish(false, false, time);

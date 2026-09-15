@@ -152,8 +152,8 @@ bool SealView::on_tick(const Glib::RefPtr<Gdk::FrameClock>& clock)
   return true;
 }
 
-void SealView::draw_ring(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
-                         double cy, double radius) const
+void SealView::draw_ring(const Cairo::RefPtr<Cairo::Context>& cr, double cx, double cy,
+                         double radius) const
 {
   cr->save();
   cr->set_source_rgba(kGlowR, kGlowG, kGlowB, 0.55);
@@ -168,8 +168,8 @@ void SealView::draw_ring(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->restore();
 }
 
-void SealView::draw_bead(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
-                         double cy, double radius) const
+void SealView::draw_bead(const Cairo::RefPtr<Cairo::Context>& cr, double cx, double cy,
+                         double radius) const
 {
   /* Cairo y-down: 0 rad is 3 o'clock. Subtract π/2 so 0 sits at the top. */
   const double theta = angle_ - M_PI / 2.0;
@@ -187,8 +187,8 @@ void SealView::draw_bead(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->restore();
 }
 
-void SealView::draw_bolt(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
-                         double cy, double radius) const
+void SealView::draw_bolt(const Cairo::RefPtr<Cairo::Context>& cr, double cx, double cy,
+                         double radius) const
 {
   const double scale = radius / 168.0;
   cr->save();
@@ -207,8 +207,8 @@ void SealView::draw_bolt(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   cr->restore();
 }
 
-void SealView::draw_pill(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
-                         double y, double width) const
+void SealView::draw_pill(const Cairo::RefPtr<Cairo::Context>& cr, double cx, double y,
+                         double width) const
 {
   const double h = 22.0;
   const double x = cx - width * 0.5;
@@ -227,8 +227,7 @@ void SealView::draw_pill(const Cairo::RefPtr<Cairo::Context>& cr, double cx,
   Cairo::TextExtents ext;
   const char* label = "EARBLASTER";
   cr->get_text_extents(label, ext);
-  cr->move_to(cx - ext.width * 0.5 - ext.x_bearing,
-              y + h * 0.5 - ext.height * 0.5 - ext.y_bearing);
+  cr->move_to(cx - ext.width * 0.5 - ext.x_bearing, y + h * 0.5 - ext.height * 0.5 - ext.y_bearing);
   cr->show_text(label);
   cr->restore();
 }

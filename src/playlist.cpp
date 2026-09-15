@@ -88,8 +88,8 @@ Glib::ustring format_duration(gint64 ns)
 bool Playlist::is_audio_path(const std::string& path)
 {
   const auto ext = extension_of(path);
-  return ext == "mp3" || ext == "ogg" || ext == "oga" || ext == "flac" ||
-         ext == "wav" || ext == "m4a" || ext == "aac" || ext == "opus";
+  return ext == "mp3" || ext == "ogg" || ext == "oga" || ext == "flac" || ext == "wav" ||
+         ext == "m4a" || ext == "aac" || ext == "opus";
 }
 
 bool Playlist::is_m3u_path(const std::string& path)
@@ -215,8 +215,7 @@ bool Playlist::ensure_discoverer()
       g_error_free(err);
     return false;
   }
-  g_signal_connect(discoverer_, "discovered", G_CALLBACK(&Playlist::on_discovered),
-                   this);
+  g_signal_connect(discoverer_, "discovered", G_CALLBACK(&Playlist::on_discovered), this);
   g_signal_connect(discoverer_, "finished", G_CALLBACK(&Playlist::on_finished), this);
   gst_discoverer_start(discoverer_);
   return true;
@@ -268,8 +267,7 @@ void Playlist::apply_discoverer_info(GstDiscovererInfo* info)
   g_free(artist);
 }
 
-void Playlist::on_discovered(GstDiscoverer*, GstDiscovererInfo* info, GError*,
-                            gpointer self)
+void Playlist::on_discovered(GstDiscoverer*, GstDiscovererInfo* info, GError*, gpointer self)
 {
   static_cast<Playlist*>(self)->apply_discoverer_info(info);
 }
@@ -461,8 +459,8 @@ void Playlist::set_repeat(Repeat repeat)
   repeat_ = repeat;
 }
 
-void Playlist::update_current_meta(const Glib::ustring& title,
-                                   const Glib::ustring& artist, gint64 duration_ns)
+void Playlist::update_current_meta(const Glib::ustring& title, const Glib::ustring& artist,
+                                   gint64 duration_ns)
 {
   auto it = current_iter();
   if (!it)

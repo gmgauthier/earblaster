@@ -46,7 +46,7 @@ The development plan called v1.0 “M0 through M6.” That feature set is what 0
 | File | What |
 |---|---|
 | [INSTALL.md](INSTALL.md) | `.deb`, tarball, AppImage, and from-source install |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones, branching, semver, lint |
 | [brand/](brand/) | Official marks and the UI reference |
 
 Not in this release (parked in DEVELOPMENT.md): spectrum ring, playlist cover column, CUE sheets, MPRIS, gapless, CDDA, WinAmp skins.
@@ -113,12 +113,15 @@ sudo apt install \
   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
   gstreamer1.0-libav \
-  libtag-dev
+  libtag-dev \
+  clang-format cppcheck
 
 meson setup build
 meson compile -C build
 ./build/earblaster
 ```
+
+PR lint gate: `./scripts/lint.sh` (CI runs this; no `--fix`). Format `src/` locally with `./scripts/lint.sh --fix`.
 
 The uninstalled binary finds CSS and brand files via `SOURCE_ROOT`. `EARBLASTER_DATA` overrides that.
 
