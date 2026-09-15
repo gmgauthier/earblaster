@@ -1,3 +1,10 @@
+earblaster (0.2.1-1) unstable; urgency=medium
+
+  * Play stale album M3Us: resolve missing .ogg names to files that exist
+    (same stem, another extension, or unique track-number match).
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Tue, 15 Sep 2026 22:55:00 +0100
+
 earblaster (0.2.0-1) unstable; urgency=medium
 
   * Thunar Open with for MP3, Ogg, and the other audio types we already play.
