@@ -13,12 +13,15 @@
 #include <gtkmm.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace earblaster {
 
 class MainWindow : public Gtk::Window {
  public:
   MainWindow();
+  void open_paths(const std::vector<std::string>& paths);
 
  private:
   void build_menu();

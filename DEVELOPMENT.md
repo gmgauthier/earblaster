@@ -185,7 +185,7 @@ Edit → Preferences: music folder, restore window, shuffle, repeat. File choose
 
 ### `Application`
 
-`Gtk::Application` with a file lock plus uniqueness. A second launch focuses the existing window.
+`Gtk::Application` with `APPLICATION_NON_UNIQUE` (no session bus). Uniqueness is a flock on `$XDG_RUNTIME_DIR/earblaster.lock`. A second launch connects to `$XDG_RUNTIME_DIR/earblaster.sock` and either focuses the window or replaces the playlist (**New**) with the paths it was given. Cold start reads leftover argv (Thunar `Exec=earblaster %F`).
 
 Uninstalled binary finds CSS and brand via `SOURCE_ROOT`. Installed binary uses `DATADIR`. `EARBLASTER_DATA` overrides both. When `APPDIR` is set (AppImage), `main.cpp` points GStreamer at the bundled plugin dir.
 
@@ -228,7 +228,7 @@ ListStore. File menu uses **New** (replace + start) vs **Add** (append, leave tr
 
 ### M5 — EQ + polish — **done 2026-09-08**
 
-10-band dialog. Persist bands, window, volume, shuffle, repeat in `earblaster.ini`. Keyboard: Space play/pause, Left/Right seek ±5s, Delete remove. File lock + `GApplication` uniqueness.
+10-band dialog. Persist bands, window, volume, shuffle, repeat in `earblaster.ini`. Keyboard: Space play/pause, Left/Right seek ±5s, Delete remove. File lock + Unix socket (no D-Bus).
 
 Preferences (same evening, after the M5 commit): music folder, restore window, shuffle/repeat checkboxes. Choosers start in that folder.
 

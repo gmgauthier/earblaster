@@ -25,7 +25,8 @@ EarBlaster is a single-window **audio** player in the Windows Media Player 7 sha
 - Playlist verbs are **New** (replace the list and start) vs **Add** (append, leave transport). Files, folders (one album level), M3U, drag-and-drop. Double-click plays that row.
 - 10-band EQ (`equalizer-10bands`), shuffle, repeat
 - Preferences: music folder, restore window, shuffle, repeat
-- Single instance: a second launch focuses the existing window
+- Single instance: a second launch focuses the existing window (flock + Unix socket, no D-Bus)
+- Thunar Open with: MP3, Ogg, FLAC, WAV, M4A, AAC, Opus, M3U (`Exec=earblaster %F`)
 - Config: `~/.config/earblaster/earblaster.ini`
 - Local files only in the default build
 

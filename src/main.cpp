@@ -6,6 +6,7 @@
 #include <gst/gst.h>
 
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -58,5 +59,19 @@ int main(int argc, char* argv[])
   setup_gst_plugin_path();
   gst_init(&argc, &argv);
 
-  return earblaster::Application::create()->run(argc, argv);
+  std::vector<std::string> files;
+  int keep = 1;
+  for (int i = 1; i < argc; ++i) {
+    if (argv[i][0] == '-' && argv[i][1] != '\0') {
+      argv[keep++] = argv[i];
+    } else {
+      files.push_back(argv[i]);
+    }
+  }
+  argc = keep;
+  argv[argc] = nullptr;
+
+  auto app = earblaster::Application::create();
+  app->set_open_paths(std::move(files));
+  return app->run(argc, argv);
 }
