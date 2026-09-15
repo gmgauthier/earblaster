@@ -2,10 +2,11 @@
 Type=Application
 Name=EarBlaster
 Comment=An audio player for The Lunduke Computer Operating System
-Exec=earblaster
+Exec=earblaster %F
 Icon=earblaster
 Terminal=false
 Hidden=false
 Categories=GTK;AudioVideo;Player;Audio;
 StartupWMClass=earblaster
 StartupNotify=true
+MimeType=audio/mpeg;audio/ogg;audio/x-vorbis+ogg;audio/flac;audio/x-flac;audio/wav;audio/x-wav;audio/mp4;audio/aac;audio/opus;audio/x-mpegurl;audio/mpegurl;application/vnd.apple.mpegurl;

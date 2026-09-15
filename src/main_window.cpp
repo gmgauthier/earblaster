@@ -411,19 +411,36 @@ void MainWindow::select_current_row()
   playlist_view_.scroll_to_row(path);
 }
 
-void MainWindow::on_new_file()
+void MainWindow::open_paths(const std::vector<std::string>& paths)
 {
-  const auto files = choose_audio_files();
-  if (files.empty())
+  if (paths.empty())
     return;
   playlist_.clear();
-  if (playlist_.add_files(files) <= 0) {
+  int n = 0;
+  std::vector<std::string> files;
+  files.reserve(paths.size());
+  for (const auto& p : paths) {
+    if (Playlist::is_m3u_path(p))
+      n += playlist_.add_m3u(p);
+    else
+      files.push_back(p);
+  }
+  n += playlist_.add_files(files);
+  if (n <= 0) {
     set_status("No audio files in that selection.");
     sync_transport();
     return;
   }
   playlist_.set_current(0);
   play_current();
+}
+
+void MainWindow::on_new_file()
+{
+  const auto files = choose_audio_files();
+  if (files.empty())
+    return;
+  open_paths(files);
 }
 
 void MainWindow::on_add_file()
