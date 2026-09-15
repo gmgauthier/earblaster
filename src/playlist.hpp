@@ -96,6 +96,7 @@ class Playlist {
   std::string iter_uri(const Gtk::TreeModel::iterator& it) const;
   int append_uri(const std::string& uri, const Glib::ustring& title);
   void enqueue_meta(const std::string& uri);
+  void schedule_meta();
   bool ensure_discoverer();
   void pump_meta();
   void apply_discoverer_info(GstDiscovererInfo* info);
@@ -113,6 +114,7 @@ class Playlist {
   GstDiscoverer* discoverer_ = nullptr;
   std::deque<std::string> meta_queue_;
   bool discovering_ = false;
+  sigc::connection meta_idle_;
 };
 
 }  // namespace earblaster
