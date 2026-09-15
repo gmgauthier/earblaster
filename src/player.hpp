@@ -30,22 +30,46 @@ class Player {
   void set_volume(double volume);
 
   static constexpr int kEqBands = 10;
-  bool has_eq() const { return eq_ != nullptr; }
+  bool has_eq() const
+  {
+    return eq_ != nullptr;
+  }
   void set_eq_band(int band, double db);
   double eq_band(int band) const;
 
-  State state() const { return state_; }
-  bool loaded() const { return !uri_.empty(); }
-  gint64 position() const { return position_; }
-  gint64 duration() const { return duration_; }
+  State state() const
+  {
+    return state_;
+  }
+  bool loaded() const
+  {
+    return !uri_.empty();
+  }
+  gint64 position() const
+  {
+    return position_;
+  }
+  gint64 duration() const
+  {
+    return duration_;
+  }
 
-  sigc::signal<void, State>& signal_state_changed() { return signal_state_changed_; }
+  sigc::signal<void, State>& signal_state_changed()
+  {
+    return signal_state_changed_;
+  }
   sigc::signal<void, gint64, gint64>& signal_position_changed()
   {
     return signal_position_changed_;
   }
-  sigc::signal<void>& signal_eos() { return signal_eos_; }
-  sigc::signal<void, Glib::ustring>& signal_error() { return signal_error_; }
+  sigc::signal<void>& signal_eos()
+  {
+    return signal_eos_;
+  }
+  sigc::signal<void, Glib::ustring>& signal_error()
+  {
+    return signal_error_;
+  }
   sigc::signal<void, Glib::RefPtr<Gdk::Pixbuf>>& signal_cover()
   {
     return signal_cover_;

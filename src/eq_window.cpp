@@ -7,13 +7,14 @@
 namespace earblaster {
 namespace {
 
-const char* kBandLabels[Settings::kEqBands] = {
-    "29", "59", "119", "237", "470", "1k", "2k", "4k", "8k", "16k"};
+const char* kBandLabels[Settings::kEqBands] = {"29", "59", "119", "237", "470",
+                                               "1k", "2k", "4k",  "8k",  "16k"};
 
 }  // namespace
 
 EqWindow::EqWindow(Player& player, Settings& settings)
-    : player_(player), settings_(settings)
+    : player_(player),
+      settings_(settings)
 {
   set_title("Equalizer");
   set_border_width(8);
