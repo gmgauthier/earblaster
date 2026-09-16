@@ -1,3 +1,9 @@
+earblaster (0.2.2-1) unstable; urgency=medium
+
+  * Standardize GTK theming for LCOS: Clearlooks-Phenix, then Clearlooks, then Adwaita:light.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Wed, 16 Sep 2026 20:21:00 +0100
+
 earblaster (0.2.1-1) unstable; urgency=medium
 
   * Play stale album M3Us: resolve missing .ogg names to files that exist
