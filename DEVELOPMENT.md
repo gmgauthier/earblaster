@@ -248,7 +248,7 @@ Tags: `v0.1.0` (first package + prefs), `v0.1.1` (duplicate-drop fix, AppImage p
 
 ### Later (not 0.1.x)
 
-Spectrum ring outside the neon ring, playlist cover column, CUE sheets, MPRIS, gapless, CDDA, WinAmp skins.
+Spectrum ring outside the neon ring, MPRIS, gapless, CDDA, WinAmp skins. Playlist cover column and CUE sheets are High in BACKLOG.md. Tag edit is a separate guest (media library manager), not this window.
 
 ## 6. Tooling (Devuan Excalibur / Debian Trixie)
 

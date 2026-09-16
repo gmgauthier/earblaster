@@ -1,8 +1,14 @@
-# In-place tag edit (parked)
+# Tag edit — moved out of EarBlaster
 
-Last updated: 2026-09-16. Status: **Low Priority**. MINOR when shipped.
+Last updated: 2026-09-16. Status: **superseded**.
 
-Right-click a playlist row → **Edit** → a panel with the ten common text fields, populated from the file, **Save** writes tags and closes. Not a cover-art editor. Not v1; WMP 7 did not tag from the playlist.
+In-player right-click Edit is **out of scope** for EarBlaster. Tagging is a separate guest app: [MEDIA-LIBRARY.md](../MEDIA-LIBRARY.md) (product catalog: `lcos-projects/PRODUCT-BACKLOG.md`).
+
+The field table below is seed spec for that app, not for this window.
+
+---
+
+Original slice (do not implement here): right-click a playlist row → **Edit** → ten TagLib fields, **Save** writes and closes.
 
 ## UI
 
