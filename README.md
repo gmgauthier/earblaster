@@ -48,9 +48,10 @@ The development plan called v1.0 “M0 through M6.” That feature set is what 0
 |---|---|
 | [INSTALL.md](INSTALL.md) | `.deb`, tarball, AppImage, and from-source install |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones, branching, semver, lint |
+| [TAG-EDIT.md](TAG-EDIT.md) | Parked: in-place playlist tag editor |
 | [brand/](brand/) | Official marks and the UI reference |
 
-Not in this release (parked in DEVELOPMENT.md): spectrum ring, playlist cover column, CUE sheets, MPRIS, gapless, CDDA, WinAmp skins.
+Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, playlist cover column, CUE sheets, MPRIS, gapless, CDDA, WinAmp skins, tag edit.
 
 ## Install
 
