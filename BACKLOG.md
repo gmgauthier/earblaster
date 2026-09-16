@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v0.2.1**. Last updated: 2026-09-15.
+Current release: **v0.2.1**. Last updated: 2026-09-16.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -18,6 +18,7 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 - Gapless playback
 - CDDA
 - WinAmp skins (`.wsz`)
+- **In-place tag edit** — right-click a row → Edit → ten TagLib fields, Save writes and closes. Stop (or refuse) if that file is playing, especially on SMB. Plan: [TAG-EDIT.md](TAG-EDIT.md). MINOR.
 
 ## Out of Scope
 
