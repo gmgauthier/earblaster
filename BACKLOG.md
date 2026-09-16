@@ -6,7 +6,6 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 
 ## High Priority
 
-- Point `debian/control` Homepage / Vcs-* at the public clone when packaging is touched next. Origin stays Gitea; GitHub is the mirror.
 - After Open with has been lived with on LCOS 0.5, consider tag `v1.0.0`.
 
 ## Low Priority
