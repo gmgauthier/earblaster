@@ -6,18 +6,17 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 
 ## High Priority
 
+- Playlist cover column
+- CUE sheets (one audio file + `.cue` as a playlist of tracks)
 - After Open with has been lived with on LCOS 0.5, consider tag `v1.0.0`.
 
 ## Low Priority
 
 - Spectrum ring outside the neon ring
-- Playlist cover column
-- CUE sheets
 - MPRIS
 - Gapless playback
 - CDDA
 - WinAmp skins (`.wsz`)
-- **In-place tag edit** — right-click a row → Edit → ten TagLib fields, Save writes and closes. Stop (or refuse) if that file is playing, especially on SMB. Plan: [TAG-EDIT.md](TAG-EDIT.md). MINOR.
 
 ## Out of Scope
 
@@ -28,6 +27,7 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 - Bryan Lunduke’s official LCOS seal
 - Qmmp / Audacious rebrand
 - Mixing host GStreamer plugins with the bundled AppImage library (0.1.2 closed this; do not regress)
+- Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
 
