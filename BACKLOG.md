@@ -25,7 +25,7 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 - Video. VLC stays the LCOS generic player. `video-sink` is `fakesink`.
 - Network in the default build (no streaming product, no online account)
 - systemd / user-bus daemon required to launch
-- Custom title bar; do not override `GTK_THEME` (prefer-light only)
+- Custom title bar. `GTK_THEME` in the environment still wins; else Clearlooks-Phenix, then Clearlooks, then Adwaita:light (process only)
 - Bryan Lunduke’s official LCOS seal
 - Qmmp / Audacious rebrand
 - Mixing host GStreamer plugins with the bundled AppImage library (0.1.2 closed this; do not regress)
