@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v0.2.1**. Last updated: 2026-09-16.
+Current release: **v0.2.2**. Last updated: 2026-09-16.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
