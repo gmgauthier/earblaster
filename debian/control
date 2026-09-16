@@ -13,9 +13,9 @@ Build-Depends:
  libgstreamer-plugins-base1.0-dev,
  libtag-dev
 Standards-Version: 4.7.0
-Homepage: https://gitea.scriptorium/gmgauthier/earblaster
-Vcs-Git: https://gitea.scriptorium/gmgauthier/earblaster.git
-Vcs-Browser: https://gitea.scriptorium/gmgauthier/earblaster
+Homepage: https://github.com/gmgauthier/earblaster
+Vcs-Git: https://github.com/gmgauthier/earblaster.git
+Vcs-Browser: https://github.com/gmgauthier/earblaster
 Rules-Requires-Root: no
 
 Package: earblaster

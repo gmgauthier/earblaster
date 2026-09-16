@@ -295,7 +295,7 @@ meson compile -C build
 - Depends on GTK3, GStreamer good/ugly/libav, taglib
 - Recommends Pulse or ALSA GStreamer plugins; do not vendor a window manager theme
 - AppImage is a fallback (LCOS 0.3 already runs AppImages). Prefer `.deb`
-- `debian/control` Vcs-* still names a private Gitea host. Public clone is GitHub. Fix those fields when touching packaging next.
+- `debian/control` Homepage / Vcs-* name the public clone (GitHub). Origin stays Gitea.
 
 ## 8. Test matrix (0.1.x / planned 1.0)
 
@@ -317,7 +317,6 @@ M0–M6 are closed. Do not open an M7 in this document.
 
 Small packaging nits, not a milestone:
 
-- Point `debian/control` Homepage / Vcs-* at GitHub
 - Live-test the `.deb` on LCOS 0.3, then consider tag `v1.0.0`
 
 Product work after that is the parked list in §5, or the next LCOS-only app (Cardfile) — not more EarBlaster scope unless a bug shows up on the target desktop.
