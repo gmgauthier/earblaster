@@ -29,6 +29,7 @@ Locked 2026-09-08. Third-party app *for* LCOS, not LCOS house art.
 | `screenshot-about.png` | About box on LCOS. |
 | `screenshot-equalizer.png` | 10-band EQ on LCOS. |
 | `screenshot-preferences.png` | Preferences on LCOS. |
+| `screenshot-sync.png` | Live LCOS shot of the Sync window. |
 | `mockup-sync.png` | Mock: Sync window (MC dual-pane). HTML: `mockup-sync.html`. |
 
 Primary ship set: `mark-ring-bolt.svg`, `icon-tile.svg`, `lockup-pill.svg`, `ui-reference.svg`.

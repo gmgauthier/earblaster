@@ -39,6 +39,8 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ![Preferences](brand/screenshot-preferences.png)
 
+![Sync](brand/screenshot-sync.png)
+
 ## Status
 
 **M0–M6 are in the tree**, plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). Window, spin, sound, playlist, cover, EQ/prefs/keyboard, Thunar Open with, packaging (`debian/`, `scripts/release.sh`). AppImage uses only bundled GStreamer; do not mix with the host.
@@ -94,6 +96,7 @@ Palette: navy `#0B1D38`, ice `#E8F2FF`, client gray `#E6E6E1`.
 - `brand/lockup-pill.svg` — About box lockup
 - `brand/screenshot-playback.png` — LCOS window (hero image above)
 - `brand/screenshot-about.png` `screenshot-equalizer.png` `screenshot-preferences.png` — About, EQ, Preferences on LCOS
+- `brand/screenshot-sync.png` — Sync window on LCOS (USB / MTP copy)
 - `brand/ui-reference.svg` — locked layout mock (not a live screenshot)
 
 Grammar and file list: [brand/README.md](brand/README.md)
