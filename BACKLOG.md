@@ -1,12 +1,11 @@
 # EarBlaster backlog
 
-Current release: **v0.2.3**. Last updated: 2026-09-17.
+Current release: **v1.0.0**. Last updated: 2026-09-17.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-- **Offline device sync** — this is **v1.0.0**. Toolbar **Sync** (far right) opens a Midnight Commander split: left = local disk (default: prefs music folder); right = attached USB block or already-mounted MTP (Surfans as `sda1`, Samsung as mtpfs). Tick files on either side; **Transfer** copies to the other pane’s current directory. No cloud, no D-Bus to launch, no transcode. Plan: [SYNC.md](SYNC.md).
 - Playlist cover column
 - CUE sheets (one audio file + `.cue` as a playlist of tracks)
 
@@ -44,3 +43,9 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 **v0.2.0** — XFCE/Thunar Open with (MimeType + `Exec=%F`). Cold start reads argv as **New**. Second instance uses `$XDG_RUNTIME_DIR/earblaster.sock` (no D-Bus, no systemd). Video types stay with VLC.
 
 **v0.2.1** — Stale album M3Us play: missing `.ogg` entries resolve to existing files (extension swap or unique leading track number); GstDiscoverer does not open the URI playbin is using.
+
+**v0.2.2** — GTK theme fallback: Clearlooks-Phenix, then Clearlooks, then Adwaita:light.
+
+**v0.2.3** — debian/control Homepage and Vcs-* point at the public GitHub clone.
+
+**v1.0.0** — Offline device sync. Menubar **Sync** (far right) opens a Midnight Commander split: left = prefs music folder; right = already-mounted USB block or MTP. Tick either side; Transfer copies via Gio (`file://` and `mtp://`). Identical names are skipped. No transcode, no D-Bus to launch. Plan: [SYNC.md](SYNC.md).

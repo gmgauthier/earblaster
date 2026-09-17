@@ -30,3 +30,17 @@ treeview header button {
 statusbar {
   background-color: #D4D0C8;
 }
+
+.earblaster-sync-pane {
+  background-color: #ecece7;
+  border: 1px solid #a8a8a0;
+}
+
+.earblaster-sync-head {
+  background-color: #D4D0C8;
+}
+
+.earblaster-sync-path {
+  background-color: #FFFFFF;
+  color: #333333;
+}

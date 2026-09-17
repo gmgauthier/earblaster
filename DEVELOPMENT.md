@@ -21,7 +21,7 @@ Repo: https://github.com/gmgauthier/earblaster
 | Polish | 10-band EQ, prefs, `earblaster.ini`, keyboard, single-instance |
 | Package | `debian/`, `scripts/release.sh` → `.deb`, tarball, AppImage |
 
-The plan called v1.0 “M0 through M6.” That feature set is what 0.1.x / 0.2.x ships. **v1.0.0** is the offline device-sync ship ([SYNC.md](SYNC.md)).
+The plan called v1.0 “M0 through M6.” That feature set is what 0.1.x / 0.2.x shipped. **v1.0.0** is offline device sync ([SYNC.md](SYNC.md)).
 
 Next work is post-v1.0 (see §9), not another milestone in this sequence.
 
@@ -94,8 +94,10 @@ earblaster
 │   ├── settings.{hpp,cpp}       ~/.config/earblaster/earblaster.ini
 │   ├── eq_window.{hpp,cpp}
 │   ├── prefs_window.{hpp,cpp}
-│   └── about_dialog.{hpp,cpp}
-├── meson.build                 version 0.1.1
+│   ├── about_dialog.{hpp,cpp}
+│   ├── sync_devices.{hpp,cpp}   USB TRAN=usb + gio MTP
+│   └── sync_window.{hpp,cpp}    MC dual-pane Gio copy
+├── meson.build                 version 1.0.0
 ├── README.md
 ├── INSTALL.md
 └── DEVELOPMENT.md
@@ -244,7 +246,7 @@ Install layout: `/usr/bin/earblaster`, icons under `hicolor`, skin under `/usr/s
 
 Tags: `v0.1.0` (first package + prefs), `v0.1.1` (duplicate-drop fix, AppImage plugin bundle).
 
-**v1.0.0 is offline device sync**, not a retag of M0–M6. Cover column and CUE sheets stay High but are not the 1.0 gate.
+**v1.0.0 is offline device sync** (shipped), not a retag of M0–M6. Cover column and CUE sheets stay High but were not the 1.0 gate.
 
 ### Later (not 0.1.x)
 
@@ -317,7 +319,7 @@ M0–M6 are closed. Do not open an M7 in this document.
 
 Small packaging nits, not a milestone:
 
-- **v1.0.0** when offline device sync ships ([SYNC.md](SYNC.md))
+- **v1.0.0** offline device sync — shipped ([SYNC.md](SYNC.md))
 
 Product work after that is the parked list in §5, or the next LCOS-only app (Cardfile) — not more EarBlaster scope unless a bug shows up on the target desktop.
 

@@ -1,3 +1,10 @@
+earblaster (1.0.0-1) unstable; urgency=medium
+
+  * Offline device sync: menubar Sync opens a dual-pane Gio copy window
+    (USB mass-storage and mounted MTP). Identical names are skipped.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Thu, 17 Sep 2026 20:08:49 +0100
+
 earblaster (0.2.3-1) unstable; urgency=medium
 
   * debian/control Homepage and Vcs-* point at the public GitHub clone.

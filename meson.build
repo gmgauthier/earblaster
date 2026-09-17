@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '0.2.3',
+  version: '1.0.0',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -44,6 +44,8 @@ executable(
   'src/settings.cpp',
   'src/eq_window.cpp',
   'src/prefs_window.cpp',
+  'src/sync_devices.cpp',
+  'src/sync_window.cpp',
   include_directories: inc,
   dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
   install: true,
