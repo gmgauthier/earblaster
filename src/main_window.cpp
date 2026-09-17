@@ -203,7 +203,17 @@ void MainWindow::build_menu()
   add_item(*help, "_About EarBlaster", sigc::mem_fun(*this, &MainWindow::on_about));
   add_menu("_Help", *help);
 
-  root_.pack_start(menubar_, Gtk::PACK_SHRINK);
+  auto* spacer = Gtk::manage(new Gtk::Label());
+  spacer->set_hexpand(true);
+  sync_btn_.set_valign(Gtk::ALIGN_CENTER);
+  sync_btn_.set_margin_end(4);
+  sync_btn_.set_margin_top(1);
+  sync_btn_.set_margin_bottom(1);
+  sync_btn_.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_sync));
+  menu_row_.pack_start(menubar_, Gtk::PACK_SHRINK);
+  menu_row_.pack_start(*spacer, Gtk::PACK_EXPAND_WIDGET);
+  menu_row_.pack_start(sync_btn_, Gtk::PACK_SHRINK);
+  root_.pack_start(menu_row_, Gtk::PACK_SHRINK);
 }
 
 void MainWindow::build_body()
@@ -711,6 +721,16 @@ void MainWindow::on_equalizer()
     eq_win_->set_transient_for(*this);
   }
   eq_win_->present();
+}
+
+void MainWindow::on_sync()
+{
+  if (!sync_win_) {
+    sync_win_ = std::make_unique<SyncWindow>(*this, settings_);
+    sync_win_->set_transient_for(*this);
+  }
+  sync_win_->present();
+  sync_win_->refresh_devices();
 }
 
 void MainWindow::on_preferences()

@@ -9,7 +9,7 @@ Four ways to get a binary, in the order LCOS cares about:
 | **AppImage** | Fallback when you cannot install packages. Needs host GStreamer codecs. |
 | **Git build** | Developers. See below. |
 
-Version comes from `meson.build` (currently `0.2.3`).
+Version comes from `meson.build` (currently `1.0.0`).
 
 ## Runtime needs (all installs except a fully bundled AppImage)
 
@@ -36,14 +36,14 @@ sudo apt install \
 From a release `.deb`:
 
 ```
-sudo apt install ./dist/earblaster_0.2.3-1_amd64.deb
+sudo apt install ./dist/earblaster_1.0.0-1_amd64.deb
 ```
 
 Or, from this tree:
 
 ```
 ./scripts/release.sh deb
-sudo apt install ./dist/earblaster_0.2.3-1_amd64.deb
+sudo apt install ./dist/earblaster_1.0.0-1_amd64.deb
 ```
 
 That installs:
@@ -63,8 +63,8 @@ Uninstall: `sudo apt remove earblaster`.
 `meson dist` produces `build/meson-dist/earblaster-VERSION.tar.xz` (demo audio under `data/samples/` is git-only, not in the tarball).
 
 ```
-tar -xf earblaster-0.2.3.tar.xz
-cd earblaster-0.2.3
+tar -xf earblaster-1.0.0.tar.xz
+cd earblaster-1.0.0
 sudo apt install build-essential meson ninja-build pkg-config \
   libgtkmm-3.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
   libtag-dev

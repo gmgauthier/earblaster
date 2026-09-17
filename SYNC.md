@@ -1,6 +1,6 @@
 # Offline device sync (High)
 
-Last updated: 2026-09-17. Status: **High Priority**. Shipping this feature **is** EarBlaster **v1.0.0**.
+Last updated: 2026-09-17. Status: **Shipped in v1.0.0**.
 
 WMP “Copy to CD or Device” / iTunes-to-iPod / Palm HotSync as a **file copy**, not a cloud account. Midnight Commander: two vertical panes, tick files, Transfer copies to the other side.
 

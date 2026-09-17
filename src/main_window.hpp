@@ -9,6 +9,7 @@
 #include "playlist.hpp"
 #include "seal_view.hpp"
 #include "settings.hpp"
+#include "sync_window.hpp"
 
 #include <gtkmm.h>
 
@@ -42,6 +43,7 @@ class MainWindow : public Gtk::Window {
   void on_about();
   void on_equalizer();
   void on_preferences();
+  void on_sync();
   std::string chooser_start_dir() const;
   void persist();
   bool on_key_press(GdkEventKey* event);
@@ -79,7 +81,9 @@ class MainWindow : public Gtk::Window {
   std::string choose_m3u(bool save);
 
   Gtk::Box root_{Gtk::ORIENTATION_VERTICAL, 0};
+  Gtk::Box menu_row_{Gtk::ORIENTATION_HORIZONTAL, 0};
   Gtk::MenuBar menubar_;
+  Gtk::Button sync_btn_{"Sync"};
   Gtk::Box body_{Gtk::ORIENTATION_HORIZONTAL, 6};
   Gtk::Box left_{Gtk::ORIENTATION_VERTICAL, 4};
   SealView well_;
@@ -101,6 +105,7 @@ class MainWindow : public Gtk::Window {
   Player player_;
   Playlist playlist_;
   std::unique_ptr<EqWindow> eq_win_;
+  std::unique_ptr<SyncWindow> sync_win_;
   bool seek_dragging_ = false;
   bool have_local_cover_ = false;
   guint last_drop_time_ = 0;
