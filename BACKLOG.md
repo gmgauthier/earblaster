@@ -1,11 +1,12 @@
 # EarBlaster backlog
 
-Current release: **v0.2.3**. Last updated: 2026-09-16.
+Current release: **v0.2.3**. Last updated: 2026-09-17.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
+- **Offline device sync.** Toolbar **Sync** (far right) opens a Midnight Commander split: left = local disk (default: prefs music folder); right = attached USB block or already-mounted MTP (Surfans as `sda1`, Samsung as mtpfs). Tick files on either side; **Transfer** copies to the other pane’s current directory. No cloud, no D-Bus to launch, no transcode. Plan: [SYNC.md](SYNC.md).
 - Playlist cover column
 - CUE sheets (one audio file + `.cue` as a playlist of tracks)
 - After Open with has been lived with on LCOS 0.5, consider tag `v1.0.0`.
