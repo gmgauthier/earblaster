@@ -42,7 +42,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 **M0–M6 are in the tree.** Window, spin, sound, playlist, cover, EQ/prefs/keyboard, and packaging (`debian/`, `scripts/release.sh`). Tagged **0.2.3** (Thunar Open with; stale M3Us resolve; AppImage uses only bundled GStreamer; do not mix with the host).
 
-The development plan called v1.0 “M0 through M6.” That feature set is what 0.1.x ships. A later tag can be named 1.0 when the package has lived on an LCOS box for a bit.
+The development plan called v1.0 “M0 through M6.” That feature set is what 0.1.x / 0.2.x ships. **v1.0.0** is offline device sync ([SYNC.md](SYNC.md)).
 
 | File | What |
 |---|---|
