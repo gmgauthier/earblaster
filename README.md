@@ -10,7 +10,7 @@ Third-party software written to live on that desktop: XFCE, XLibre, Clearlooks c
 
 LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLunduke/LCOS)
 
-Current release: **[0.2.3](https://github.com/gmgauthier/earblaster/releases/tag/v0.2.3)** (2026-09-15).
+Current release: **[1.0.0](https://github.com/gmgauthier/earblaster/releases/tag/v1.0.0)** (2026-09-17).
 
 ## What it is
 
@@ -29,6 +29,7 @@ EarBlaster is a single-window **audio** player in the Windows Media Player 7 sha
 - Thunar Open with: MP3, Ogg, FLAC, WAV, M4A, AAC, Opus, M3U (`Exec=earblaster %F`)
 - Config: `~/.config/earblaster/earblaster.ini`
 - Local files only in the default build
+- **Sync** (menubar, far right): copy files to an already-mounted USB stick or MTP phone (Gio, no transcode)
 
 It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. The product mark is the ring-and-bolt; the wordmark is the EARBLASTER pill.
 
@@ -40,16 +41,14 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M0–M6 are in the tree.** Window, spin, sound, playlist, cover, EQ/prefs/keyboard, and packaging (`debian/`, `scripts/release.sh`). Tagged **0.2.3** (Thunar Open with; stale M3Us resolve; AppImage uses only bundled GStreamer; do not mix with the host).
-
-The development plan called v1.0 “M0 through M6.” That feature set is what 0.1.x / 0.2.x ships. **v1.0.0** is offline device sync ([SYNC.md](SYNC.md)).
+**M0–M6 are in the tree**, plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). Window, spin, sound, playlist, cover, EQ/prefs/keyboard, Thunar Open with, packaging (`debian/`, `scripts/release.sh`). AppImage uses only bundled GStreamer; do not mix with the host.
 
 | File | What |
 |---|---|
 | [INSTALL.md](INSTALL.md) | `.deb`, tarball, AppImage, and from-source install |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Locked decisions, architecture, milestones, branching, semver, lint |
 | [TAG-EDIT.md](TAG-EDIT.md) | Superseded: tagging is a separate media library manager |
-| [SYNC.md](SYNC.md) | High: offline USB/MTP copy (Midnight Commander panes) |
+| [SYNC.md](SYNC.md) | Offline USB/MTP copy (Midnight Commander panes) — shipped in 1.0.0 |
 | [brand/](brand/) | Official marks and the UI reference |
 
 Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRIS, gapless, CDDA, WinAmp skins. High: playlist cover column, CUE sheets. Tagging is a separate app.
@@ -59,7 +58,7 @@ Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRI
 Preferred on LCOS / Devuan / Debian — a release `.deb`:
 
 ```
-sudo apt install ./earblaster_0.2.3-1_amd64.deb
+sudo apt install ./earblaster_1.0.0-1_amd64.deb
 ```
 
 Assets live on the [Releases](https://github.com/gmgauthier/earblaster/releases) page. AppImage and source tarball are documented in [INSTALL.md](INSTALL.md). Config is `~/.config/earblaster/earblaster.ini`.
@@ -71,14 +70,14 @@ The AppImage **bundles** libgstreamer and plugins from the Debian build host. On
 **Normal run** — the AppImage runtime sets `APPDIR` for you:
 
 ```
-chmod +x EarBlaster-0.2.3-x86_64.AppImage
-./EarBlaster-0.2.3-x86_64.AppImage
+chmod +x EarBlaster-1.0.0-x86_64.AppImage
+./EarBlaster-1.0.0-x86_64.AppImage
 ```
 
 **Extracted tree** — if you unpack it (`--appimage-extract`), you must set `APPDIR` to that tree or GStreamer will use the host and you can hit the same mismatch:
 
 ```
-./EarBlaster-0.2.3-x86_64.AppImage --appimage-extract
+./EarBlaster-1.0.0-x86_64.AppImage --appimage-extract
 export APPDIR="$PWD/squashfs-root"
 "$APPDIR/AppRun"
 # or: "$APPDIR/usr/bin/earblaster"
