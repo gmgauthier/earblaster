@@ -6,7 +6,7 @@ WMP “Copy to CD or Device” / iTunes-to-iPod / Palm HotSync as a **file copy*
 
 ## UI
 
-- Toolbar **Sync**, far right (same slot as Dispatch `[MAIL]` / `[FEED]`).
+- Toolbar / menubar **Sync**, far right (same slot as Dispatch `[MAIL]` / `[FEED]`). Mock: [brand/mockup-sync.png](brand/mockup-sync.png).
 - Pop-out window, two panes:
   - **Left** — local filesystem. Default start: prefs **music folder** (already in EarBlaster).
   - **Right** — the attached device. User picks the music directory on that device (e.g. `/Music`, `/Internal storage/Music`).

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EarBlaster — Sync mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #3a3a3a;
+    font: 13px "DejaVu Sans", "Liberation Sans", Tahoma, sans-serif;
+    color: #000;
+  }
+  .desk {
+    width: 942px;
+    height: 608px;
+    margin: 0;
+    position: relative;
+    box-shadow: none;
+  }
+  /* Clearlooks-Phenix titlebar */
+  .win {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    background: #dcdad5;
+    border: 1px solid #5a7aa5;
+  }
+  .titlebar {
+    height: 24px;
+    background: linear-gradient(180deg, #8eb4e0 0%, #4a7ab8 55%, #3d6ca8 100%);
+    color: #fff;
+    display: flex; align-items: center;
+    padding: 0 6px;
+    font-size: 13px;
+    text-shadow: 0 1px 0 rgba(0,0,0,.25);
+  }
+  .titlebar .icon {
+    width: 16px; height: 16px; margin-right: 6px;
+    background: #0B1D38; border-radius: 2px;
+  }
+  .titlebar .name { flex: 1; text-align: center; font-weight: 600; }
+  .tb-btns { display: flex; gap: 2px; }
+  .tb-btns span {
+    width: 18px; height: 16px; background: #e8e8e4;
+    border: 1px solid #6a8ab8; border-radius: 2px;
+    color: #333; font-size: 10px; text-align: center; line-height: 14px;
+  }
+  .menubar {
+    height: 24px;
+    background: #ecece7;
+    border-bottom: 1px solid #c4c4bc;
+    display: flex; align-items: center;
+    padding: 0 6px;
+  }
+  .menubar .left { display: flex; gap: 14px; color: #222; }
+  .menubar .left u { text-decoration: none; border-bottom: 1px solid #222; }
+  .menubar .spacer { flex: 1; }
+  .sync-btn {
+    background: #e8e8e4;
+    border: 1px solid #8a8a82;
+    border-radius: 2px;
+    padding: 1px 10px;
+    font: 12px inherit;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #b0b0a8;
+  }
+  .client {
+    flex: 1;
+    display: flex;
+    background: #E6E6E1;
+    min-height: 0;
+  }
+  .leftcol {
+    width: 236px;
+    padding: 8px 10px 8px 8px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-right: 1px solid #c8c8c0;
+  }
+  .well {
+    background: #0B1D38;
+    height: 236px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .well img { width: 210px; height: 210px; object-fit: contain; }
+  .btns { display: flex; justify-content: space-between; gap: 4px; }
+  .tbtn {
+    flex: 1; height: 28px;
+    background: linear-gradient(180deg, #f6f6f2, #d4d4cc);
+    border: 1px solid #8a8a82; border-radius: 3px;
+    font-size: 12px;
+  }
+  .lab { text-align: center; color: #333; font-size: 12px; margin-top: 2px; }
+  .slider {
+    height: 6px; background: #c8c8d8; border-radius: 2px;
+    border: 1px solid #a0a0b0; position: relative; margin: 4px 4px 0;
+  }
+  .thumb {
+    position: absolute; top: -5px; width: 12px; height: 16px;
+    background: linear-gradient(180deg, #fafafa, #c8c8c8);
+    border: 1px solid #888; border-radius: 2px;
+  }
+  .playlist {
+    flex: 1; background: #fff; display: flex; flex-direction: column; min-width: 0;
+    margin: 8px 8px 8px 0;
+    border: 1px solid #a8a8a0;
+  }
+  .plist-head {
+    display: flex; background: #D4D0C8; border-bottom: 1px solid #b0b0a8;
+    font-size: 12px; height: 22px; align-items: center;
+  }
+  .plist-head span { padding: 0 8px; border-right: 1px solid #c8c8c0; }
+  .plist-head .t { flex: 1; }
+  .plist-head .a { width: 160px; }
+  .plist-head .m { width: 48px; border-right: none; text-align: right; }
+  .row {
+    display: flex; height: 20px; align-items: center;
+    background: #8AB4E0; color: #000; font-size: 12px;
+  }
+  .row span { padding: 0 8px; overflow: hidden; white-space: nowrap; }
+  .row .t { flex: 1; }
+  .row .a { width: 160px; }
+  .row .m { width: 48px; text-align: right; }
+  .status {
+    height: 22px; background: #D4D0C8; border-top: 1px solid #b8b8b0;
+    padding: 3px 8px; font-size: 12px; color: #333;
+  }
+
+  /* Sync dialog */
+  .dlg {
+    position: absolute;
+    left: 118px; top: 78px;
+    width: 706px; height: 428px;
+    display: flex; flex-direction: column;
+    background: #dcdad5;
+    border: 1px solid #5a7aa5;
+    box-shadow: 4px 6px 18px rgba(0,0,0,.35);
+  }
+  .dlg .titlebar { text-align: left; }
+  .dlg .titlebar .name { text-align: center; }
+  .dlg-body { flex: 1; padding: 8px; display: flex; flex-direction: column; min-height: 0; gap: 6px; }
+  .panes { flex: 1; display: flex; gap: 8px; min-height: 0; }
+  .pane {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+    background: #ecece7; border: 1px solid #a8a8a0;
+  }
+  .pane-head {
+    background: #D4D0C8; border-bottom: 1px solid #b0b0a8;
+    padding: 4px 8px; font-size: 12px; font-weight: 600;
+  }
+  .path {
+    background: #fff; border-bottom: 1px solid #c0c0b8;
+    padding: 3px 8px; font-size: 11px; color: #333;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .list { flex: 1; background: #fff; overflow: hidden; font-size: 12px; }
+  .item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 2px 8px; height: 20px;
+  }
+  .item.sel { background: #5E84B0; color: #fff; }
+  .item.tick { background: #c5d4e8; }
+  .item input { margin: 0; }
+  .item .nm { flex: 1; overflow: hidden; white-space: nowrap; }
+  .item .sz { color: #555; font-size: 11px; }
+  .item.sel .sz { color: #e8e8e8; }
+  .item.dir .nm { font-weight: 600; }
+  .actions {
+    display: flex; justify-content: flex-end; gap: 8px; padding: 4px 0 0;
+  }
+  .gbtn {
+    min-width: 88px; height: 26px;
+    background: linear-gradient(180deg, #f6f6f2, #d0d0c8);
+    border: 1px solid #7a7a72; border-radius: 3px;
+    font: 13px inherit;
+    box-shadow: inset 1px 1px 0 #fff;
+  }
+  .gbtn.pri { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="win">
+    <div class="titlebar">
+      <div class="icon"></div>
+      <div class="name">EarBlaster</div>
+      <div class="tb-btns"><span>_</span><span>□</span><span>×</span></div>
+    </div>
+    <div class="menubar">
+      <div class="left">
+        <span><u>F</u>ile</span>
+        <span><u>E</u>dit</span>
+        <span><u>V</u>iew</span>
+        <span><u>P</u>lay</span>
+        <span><u>T</u>ools</span>
+        <span><u>H</u>elp</span>
+      </div>
+      <div class="spacer"></div>
+      <button class="sync-btn">Sync</button>
+    </div>
+    <div class="client">
+      <div class="leftcol">
+        <div class="well">
+          <img src="lockup-pill.svg" alt="">
+        </div>
+        <div class="btns">
+          <button class="tbtn">⏮</button>
+          <button class="tbtn">▶</button>
+          <button class="tbtn">⏸</button>
+          <button class="tbtn">■</button>
+          <button class="tbtn">⏭</button>
+        </div>
+        <div class="lab">Seek</div>
+        <div class="slider"><div class="thumb" style="left:18%"></div></div>
+        <div class="lab">Volume</div>
+        <div class="slider"><div class="thumb" style="left:70%"></div></div>
+      </div>
+      <div class="playlist">
+        <div class="plist-head">
+          <span class="t">Title</span><span class="a">Artist</span><span class="m">Time</span>
+        </div>
+        <div class="row">
+          <span class="t">7-String Bach (Poll) — Praeludio</span>
+          <span class="a">Bach</span>
+          <span class="m">2:22</span>
+        </div>
+      </div>
+    </div>
+    <div class="status">Paused — 0:27 / 2:22</div>
+  </div>
+
+  <div class="dlg">
+    <div class="titlebar">
+      <div class="icon"></div>
+      <div class="name">Sync</div>
+      <div class="tb-btns"><span>×</span></div>
+    </div>
+    <div class="dlg-body">
+      <div class="panes">
+        <div class="pane">
+          <div class="pane-head">This computer</div>
+          <div class="path">/data/Audio/Music</div>
+          <div class="list">
+            <div class="item dir"><input type="checkbox"><span class="nm">[..]</span></div>
+            <div class="item dir tick"><input type="checkbox" checked><span class="nm">7-String Bach (Poll)_</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Beethoven The Symphonies (Disc 5)_</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Classical</span></div>
+            <div class="item"><input type="checkbox"><span class="nm">All_Symphonies.m3u</span><span class="sz">88 KB</span></div>
+            <div class="item sel"><input type="checkbox"><span class="nm">beethoven-egmont.mp3</span><span class="sz">5.1 MB</span></div>
+            <div class="item"><input type="checkbox"><span class="nm">beethoven-mass-in-c-kyrie.ogg</span><span class="sz">4.8 MB</span></div>
+          </div>
+        </div>
+        <div class="pane">
+          <div class="pane-head">SURFANS-F20  ·  /dev/sda1</div>
+          <div class="path">/media/gmgauthier/3864-3134</div>
+          <div class="list">
+            <div class="item dir"><input type="checkbox"><span class="nm">Classical</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Folk &amp; Trad</span></div>
+            <div class="item dir tick"><input type="checkbox" checked><span class="nm">Jazz &amp; Blues</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Metal</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Rock</span></div>
+            <div class="item dir"><input type="checkbox"><span class="nm">Soundtrack</span></div>
+            <div class="item"><input type="checkbox"><span class="nm">All_Symphonies.m3u</span><span class="sz">88 KB</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="gbtn pri">Transfer</button>
+        <button class="gbtn">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
