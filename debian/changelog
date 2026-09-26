@@ -1,3 +1,9 @@
+earblaster (1.1.0-1) unstable; urgency=medium
+
+  * Playlist cover column and CUE sheet tracks (INDEX 01 chapters).
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Sat, 26 Sep 2026 21:30:00 +0100
+
 earblaster (1.0.0-1) unstable; urgency=medium
 
   * Offline device sync: menubar Sync opens a dual-pane Gio copy window

@@ -10,7 +10,7 @@ Third-party software written to live on that desktop: XFCE, XLibre, Clearlooks c
 
 LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLunduke/LCOS)
 
-Current release: **[1.0.0](https://github.com/gmgauthier/earblaster/releases/tag/v1.0.0)** (2026-09-17).
+Current release: **[1.1.0](https://github.com/gmgauthier/earblaster/releases/tag/v1.1.0)** (2026-09-26).
 
 ## What it is
 
@@ -22,11 +22,11 @@ EarBlaster is a single-window **audio** player in the Windows Media Player 7 sha
 - One skin (`lcos`): navy well + ice-white neon
 - Spinning single-ring lightning mark while a track plays; yellow bead at 1 rev/s
 - Cover art after one bead lap: TagLib embedded picture, then sidecar `folder.jpg` / `cover.jpg` / `AlbumArt.jpg`, then `GST_TAG_IMAGE`. Stretch-fills the well. Stop restores the mark.
-- Playlist verbs are **New** (replace the list and start) vs **Add** (append, leave transport). Files, folders (one album level), M3U, drag-and-drop. Double-click plays that row.
+- Playlist verbs are **New** (replace the list and start) vs **Add** (append, leave transport). Files, folders (one album level), M3U, CUE sheets, drag-and-drop. Cover column. Double-click plays that row.
 - 10-band EQ (`equalizer-10bands`), shuffle, repeat
 - Preferences: music folder, restore window, shuffle, repeat
 - Single instance: a second launch focuses the existing window (flock + Unix socket, no D-Bus)
-- Thunar Open with: MP3, Ogg, FLAC, WAV, M4A, AAC, Opus, M3U (`Exec=earblaster %F`)
+- Thunar Open with: MP3, Ogg, FLAC, WAV, M4A, AAC, Opus, M3U, CUE (`Exec=earblaster %F`)
 - Config: `~/.config/earblaster/earblaster.ini`
 - Local files only in the default build
 - **Sync** (menubar, far right): copy files to an already-mounted USB stick or MTP phone (Gio, no transcode)
@@ -43,7 +43,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**M0–M6 are in the tree**, plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). Window, spin, sound, playlist, cover, EQ/prefs/keyboard, Thunar Open with, packaging (`debian/`, `scripts/release.sh`). AppImage uses only bundled GStreamer; do not mix with the host.
+**v1.1.0.** Playlist cover column and CUE sheet tracks. M0–M6 plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). AppImage uses only bundled GStreamer; do not mix with the host.
 
 | File | What |
 |---|---|
@@ -53,14 +53,14 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 | [SYNC.md](SYNC.md) | Offline USB/MTP copy (Midnight Commander panes) — shipped in 1.0.0 |
 | [brand/](brand/) | Official marks and the UI reference |
 
-Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRIS, gapless, CDDA, WinAmp skins. This branch: playlist cover column, CUE sheets. Tagging is a separate app.
+Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRIS, gapless, CDDA, WinAmp skins. Tagging is a separate app.
 
 ## Install
 
 Preferred on LCOS / Devuan / Debian — a release `.deb`:
 
 ```
-sudo apt install ./earblaster_1.0.0-1_amd64.deb
+sudo apt install ./earblaster_1.1.0-1_amd64.deb
 ```
 
 Assets live on the [Releases](https://github.com/gmgauthier/earblaster/releases) page. AppImage and source tarball are documented in [INSTALL.md](INSTALL.md). Config is `~/.config/earblaster/earblaster.ini`.
@@ -72,14 +72,14 @@ The AppImage **bundles** libgstreamer and plugins from the Debian build host. On
 **Normal run** — the AppImage runtime sets `APPDIR` for you:
 
 ```
-chmod +x EarBlaster-1.0.0-x86_64.AppImage
-./EarBlaster-1.0.0-x86_64.AppImage
+chmod +x EarBlaster-1.1.0-x86_64.AppImage
+./EarBlaster-1.1.0-x86_64.AppImage
 ```
 
 **Extracted tree** — if you unpack it (`--appimage-extract`), you must set `APPDIR` to that tree or GStreamer will use the host and you can hit the same mismatch:
 
 ```
-./EarBlaster-1.0.0-x86_64.AppImage --appimage-extract
+./EarBlaster-1.1.0-x86_64.AppImage --appimage-extract
 export APPDIR="$PWD/squashfs-root"
 "$APPDIR/AppRun"
 # or: "$APPDIR/usr/bin/earblaster"

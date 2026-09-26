@@ -1,12 +1,12 @@
 # EarBlaster backlog
 
-Current release: **v1.0.0**. Last updated: 2026-09-17.
+Current release: **v1.1.0**. Last updated: 2026-09-26.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
 ## High Priority
 
-None. Playlist cover column and CUE sheets are in this branch.
+None.
 
 ## Low Priority
 
@@ -28,6 +28,8 @@ None. Playlist cover column and CUE sheets are in this branch.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.0** — Playlist cover column (32px TagLib/sidecar thumbs). CUE sheets expand to TITLE/PERFORMER tracks; playbin seeks INDEX 01 ranges.
 
 **v0.1.0 (M0–M6)** — gtkmm-3 window, spinning ring + bead, GStreamer `playbin` audio, New vs Add playlist (files, one album folder, M3U, drop), cover art (TagLib → sidecar → `GST_TAG_IMAGE`), 10-band EQ, prefs, keyboard, single-instance, `.deb` / tarball / AppImage. Config: `~/.config/earblaster/earblaster.ini`.
 

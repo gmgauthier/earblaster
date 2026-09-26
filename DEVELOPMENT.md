@@ -97,7 +97,7 @@ earblaster
 │   ├── about_dialog.{hpp,cpp}
 │   ├── sync_devices.{hpp,cpp}   USB TRAN=usb + gio MTP
 │   └── sync_window.{hpp,cpp}    MC dual-pane Gio copy
-├── meson.build                 version 1.0.0
+├── meson.build                 version 1.1.0
 ├── README.md
 ├── INSTALL.md
 └── DEVELOPMENT.md
@@ -250,7 +250,7 @@ Tags: `v0.1.0` (first package + prefs), `v0.1.1` (duplicate-drop fix, AppImage p
 
 ### Later (not 0.1.x)
 
-Spectrum ring outside the neon ring, MPRIS, gapless, CDDA, WinAmp skins. Playlist cover column and CUE sheets are in this branch. Tag edit is a separate guest (media library manager), not this window.
+Spectrum ring outside the neon ring, MPRIS, gapless, CDDA, WinAmp skins. Playlist cover column and CUE sheets shipped in v1.1.0. Tag edit is a separate guest (media library manager), not this window.
 
 ## 6. Tooling (Devuan Excalibur / Debian Trixie)
 
