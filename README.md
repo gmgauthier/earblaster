@@ -53,7 +53,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 | [SYNC.md](SYNC.md) | Offline USB/MTP copy (Midnight Commander panes) — shipped in 1.0.0 |
 | [brand/](brand/) | Official marks and the UI reference |
 
-Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRIS, gapless, CDDA, WinAmp skins. High: playlist cover column, CUE sheets. Tagging is a separate app.
+Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRIS, gapless, CDDA, WinAmp skins. This branch: playlist cover column, CUE sheets. Tagging is a separate app.
 
 ## Install
 

@@ -6,8 +6,7 @@ Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projec
 
 ## High Priority
 
-- Playlist cover column
-- CUE sheets (one audio file + `.cue` as a playlist of tracks)
+None. Playlist cover column and CUE sheets are in this branch.
 
 ## Low Priority
 

@@ -246,11 +246,11 @@ Install layout: `/usr/bin/earblaster`, icons under `hicolor`, skin under `/usr/s
 
 Tags: `v0.1.0` (first package + prefs), `v0.1.1` (duplicate-drop fix, AppImage plugin bundle).
 
-**v1.0.0 is offline device sync** (shipped), not a retag of M0–M6. Cover column and CUE sheets stay High but were not the 1.0 gate.
+**v1.0.0 is offline device sync** (shipped), not a retag of M0–M6.
 
 ### Later (not 0.1.x)
 
-Spectrum ring outside the neon ring, MPRIS, gapless, CDDA, WinAmp skins. Playlist cover column and CUE sheets are High in BACKLOG.md. Tag edit is a separate guest (media library manager), not this window.
+Spectrum ring outside the neon ring, MPRIS, gapless, CDDA, WinAmp skins. Playlist cover column and CUE sheets are in this branch. Tag edit is a separate guest (media library manager), not this window.
 
 ## 6. Tooling (Devuan Excalibur / Debian Trixie)
 

@@ -2,12 +2,14 @@
 
 #pragma once
 
+#include <gdkmm/pixbuf.h>
 #include <gtkmm.h>
 
+#include <deque>
+#include <map>
+#include <random>
 #include <string>
 #include <vector>
-#include <deque>
-#include <random>
 
 typedef struct _GstDiscoverer GstDiscoverer;
 typedef struct _GstDiscovererInfo GstDiscovererInfo;
@@ -21,17 +23,25 @@ class Playlist {
   struct Columns : public Gtk::TreeModel::ColumnRecord {
     Columns()
     {
+      add(cover);
       add(title);
       add(artist);
       add(time);
       add(uri);
       add(duration_ns);
+      add(start_ns);
+      add(stop_ns);
+      add(cue);
     }
+    Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> cover;
     Gtk::TreeModelColumn<Glib::ustring> title;
     Gtk::TreeModelColumn<Glib::ustring> artist;
     Gtk::TreeModelColumn<Glib::ustring> time;
     Gtk::TreeModelColumn<Glib::ustring> uri;
     Gtk::TreeModelColumn<gint64> duration_ns;
+    Gtk::TreeModelColumn<gint64> start_ns;
+    Gtk::TreeModelColumn<gint64> stop_ns;
+    Gtk::TreeModelColumn<bool> cue;
   };
 
   Playlist();
@@ -58,6 +68,8 @@ class Playlist {
 
   int current_index() const;
   std::string current_uri() const;
+  gint64 current_start_ns() const;
+  gint64 current_stop_ns() const;
   Gtk::TreeModel::iterator current_iter() const;
   Gtk::TreeModel::Path current_path() const;
   void set_current(int index);
@@ -67,6 +79,7 @@ class Playlist {
   int add_files(const std::vector<std::string>& paths);
   int add_folder(const std::string& dir);
   int add_m3u(const std::string& path);
+  int add_cue(const std::string& path);
   int add_dropped(const std::vector<Glib::ustring>& uris);
   bool save_m3u(const std::string& path) const;
 
@@ -91,12 +104,17 @@ class Playlist {
 
   static bool is_audio_path(const std::string& path);
   static bool is_m3u_path(const std::string& path);
+  static bool is_cue_path(const std::string& path);
 
  private:
   std::string iter_uri(const Gtk::TreeModel::iterator& it) const;
-  int append_uri(const std::string& uri, const Glib::ustring& title);
+  int append_uri(const std::string& uri, const Glib::ustring& title, gint64 start_ns = 0,
+                 gint64 stop_ns = 0, bool cue = false, const Glib::ustring& artist = {});
   void enqueue_meta(const std::string& uri);
+  void enqueue_cover(const std::string& uri);
   void schedule_meta();
+  void schedule_cover();
+  void pump_cover();
   bool ensure_discoverer();
   void pump_meta();
   void apply_discoverer_info(GstDiscovererInfo* info);
@@ -113,8 +131,11 @@ class Playlist {
   std::mt19937 rng_{std::random_device{}()};
   GstDiscoverer* discoverer_ = nullptr;
   std::deque<std::string> meta_queue_;
+  std::deque<std::string> cover_queue_;
+  std::map<std::string, Glib::RefPtr<Gdk::Pixbuf>> cover_cache_;
   bool discovering_ = false;
   sigc::connection meta_idle_;
+  sigc::connection cover_idle_;
 };
 
 }  // namespace earblaster

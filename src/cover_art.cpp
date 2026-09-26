@@ -143,4 +143,20 @@ Glib::RefPtr<Gdk::Pixbuf> load_cover(const std::string& path_or_uri)
   return from_sidecar(path);
 }
 
+Glib::RefPtr<Gdk::Pixbuf> load_cover_thumb(const std::string& path_or_uri, int size)
+{
+  if (size < 8)
+    size = 8;
+  auto pix = load_cover(path_or_uri);
+  if (!pix)
+    return {};
+  if (pix->get_width() == size && pix->get_height() == size)
+    return pix;
+  try {
+    return pix->scale_simple(size, size, Gdk::INTERP_BILINEAR);
+  } catch (const Glib::Error&) {
+    return {};
+  }
+}
+
 }  // namespace earblaster

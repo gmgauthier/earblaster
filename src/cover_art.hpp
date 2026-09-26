@@ -10,5 +10,6 @@ namespace earblaster {
 
 /* Embedded TagLib picture first, then sidecar folder.jpg / cover.jpg / etc. */
 Glib::RefPtr<Gdk::Pixbuf> load_cover(const std::string& path_or_uri);
+Glib::RefPtr<Gdk::Pixbuf> load_cover_thumb(const std::string& path_or_uri, int size);
 
 }  // namespace earblaster

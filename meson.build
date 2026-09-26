@@ -40,6 +40,7 @@ executable(
   'src/about_dialog.cpp',
   'src/player.cpp',
   'src/playlist.cpp',
+  'src/cue_sheet.cpp',
   'src/cover_art.cpp',
   'src/settings.cpp',
   'src/eq_window.cpp',

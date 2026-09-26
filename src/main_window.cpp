@@ -55,6 +55,8 @@ void add_audio_filter(Gtk::FileChooserDialog& dlg)
   filter->add_pattern("*.flac");
   filter->add_pattern("*.wav");
   filter->add_pattern("*.m4a");
+  filter->add_pattern("*.m4b");
+  filter->add_pattern("*.cue");
   dlg.add_filter(filter);
 }
 
@@ -64,6 +66,7 @@ void add_m3u_filter(Gtk::FileChooserDialog& dlg)
   filter->set_name("Playlist");
   filter->add_pattern("*.m3u");
   filter->add_pattern("*.m3u8");
+  filter->add_pattern("*.cue");
   dlg.add_filter(filter);
 }
 
@@ -280,6 +283,17 @@ void MainWindow::build_body()
   body_.pack_start(left_, Gtk::PACK_SHRINK);
 
   playlist_view_.set_model(playlist_.store());
+  {
+    auto* pix = Gtk::manage(new Gtk::CellRendererPixbuf());
+    pix->set_fixed_size(32, 32);
+    auto* col = Gtk::manage(new Gtk::TreeViewColumn(" ", *pix));
+    col->add_attribute(*pix, "pixbuf", playlist_.columns().cover);
+    col->set_sizing(Gtk::TREE_VIEW_COLUMN_FIXED);
+    col->set_fixed_width(40);
+    col->set_min_width(40);
+    col->set_resizable(false);
+    playlist_view_.append_column(*col);
+  }
   auto add_col = [this](const char* name, const Gtk::TreeModelColumn<Glib::ustring>& model_col,
                         bool expand, int min_width) {
     auto* rend = Gtk::manage(new Gtk::CellRendererText());
@@ -393,7 +407,7 @@ void MainWindow::play_current()
   const std::string uri = playlist_.current_uri();
   if (uri.empty())
     return;
-  if (!player_.open(uri))
+  if (!player_.open(uri, playlist_.current_start_ns(), playlist_.current_stop_ns()))
     return;
   const auto cover = load_cover(uri);
   have_local_cover_ = static_cast<bool>(cover);
@@ -432,6 +446,8 @@ void MainWindow::open_paths(const std::vector<std::string>& paths)
   for (const auto& p : paths) {
     if (Playlist::is_m3u_path(p))
       n += playlist_.add_m3u(p);
+    else if (Playlist::is_cue_path(p))
+      n += playlist_.add_cue(p);
     else
       files.push_back(p);
   }
@@ -495,7 +511,9 @@ void MainWindow::on_new_playlist()
   if (path.empty())
     return;
   playlist_.clear();
-  if (playlist_.add_m3u(path) <= 0) {
+  const int loaded =
+      Playlist::is_cue_path(path) ? playlist_.add_cue(path) : playlist_.add_m3u(path);
+  if (loaded <= 0) {
     set_status("Playlist had no playable audio.");
     sync_transport();
     return;
@@ -509,7 +527,9 @@ void MainWindow::on_add_playlist()
   const auto path = choose_m3u(false);
   if (path.empty())
     return;
-  if (playlist_.add_m3u(path) <= 0)
+  const int loaded =
+      Playlist::is_cue_path(path) ? playlist_.add_cue(path) : playlist_.add_m3u(path);
+  if (loaded <= 0)
     set_status("Playlist had no playable audio.");
   sync_transport();
 }

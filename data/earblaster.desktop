@@ -9,4 +9,4 @@ Hidden=false
 Categories=GTK;AudioVideo;Player;Audio;
 StartupWMClass=earblaster
 StartupNotify=true
-MimeType=audio/mpeg;audio/ogg;audio/x-vorbis+ogg;audio/flac;audio/x-flac;audio/wav;audio/x-wav;audio/mp4;audio/aac;audio/opus;audio/x-mpegurl;audio/mpegurl;application/vnd.apple.mpegurl;
+MimeType=audio/mpeg;audio/ogg;audio/x-vorbis+ogg;audio/flac;audio/x-flac;audio/wav;audio/x-wav;audio/mp4;audio/x-m4b;audio/aac;audio/opus;audio/x-mpegurl;audio/mpegurl;application/vnd.apple.mpegurl;application/x-cue;audio/x-cue;

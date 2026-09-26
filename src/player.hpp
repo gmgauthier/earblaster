@@ -22,7 +22,7 @@ class Player {
   Player(const Player&) = delete;
   Player& operator=(const Player&) = delete;
 
-  bool open(const std::string& path_or_uri);
+  bool open(const std::string& path_or_uri, gint64 start_ns = 0, gint64 stop_ns = 0);
   void play();
   void pause();
   void stop();
@@ -88,6 +88,7 @@ class Player {
   void stop_position_timer();
   void query_position();
   void handle_tags(GstTagList* tags);
+  void apply_clip_seek();
 
   GstElement* playbin_ = nullptr;
   GstElement* eq_ = nullptr;
@@ -98,6 +99,10 @@ class Player {
   State state_ = State::Stopped;
   gint64 position_ = 0;
   gint64 duration_ = 0;
+  gint64 clip_start_ = 0;
+  gint64 clip_stop_ = 0;
+  bool pending_clip_seek_ = false;
+  bool clip_eos_sent_ = false;
   double volume_ = 0.8;
 
   sigc::signal<void, State> signal_state_changed_;

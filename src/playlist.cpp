@@ -1,13 +1,18 @@
 /* SPDX-License-Identifier: Unlicense */
 
 #include "playlist.hpp"
+#include "cover_art.hpp"
+#include "cue_sheet.hpp"
 
 #include <gst/pbutils/pbutils.h>
+#include <taglib/fileref.h>
+#include <taglib/audioproperties.h>
 
 #include <algorithm>
 #include <cctype>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
+#include <set>
 
 namespace earblaster {
 namespace {
@@ -77,13 +82,13 @@ Glib::ustring format_duration(gint64 ns)
 {
   if (ns <= 0)
     return {};
-  const int total = static_cast<int>(ns / (1000 * 1000 * 1000LL));
+  const int total = static_cast<int>((ns + 500000000LL) / (1000 * 1000 * 1000LL));
   char buf[32];
   g_snprintf(buf, sizeof(buf), "%d:%02d", total / 60, total % 60);
   return buf;
 }
 
-const char* kAltExt[] = {"ogg", "oga", "mp3", "flac", "wav", "m4a", "aac", "opus", nullptr};
+const char* kAltExt[] = {"ogg", "oga", "mp3", "flac", "wav", "m4a", "m4b", "aac", "opus", nullptr};
 
 std::string leading_track(const std::string& name)
 {
@@ -148,13 +153,18 @@ bool Playlist::is_audio_path(const std::string& path)
 {
   const auto ext = extension_of(path);
   return ext == "mp3" || ext == "ogg" || ext == "oga" || ext == "flac" || ext == "wav" ||
-         ext == "m4a" || ext == "aac" || ext == "opus";
+         ext == "m4a" || ext == "m4b" || ext == "aac" || ext == "opus";
 }
 
 bool Playlist::is_m3u_path(const std::string& path)
 {
   const auto ext = extension_of(path);
   return ext == "m3u" || ext == "m3u8";
+}
+
+bool Playlist::is_cue_path(const std::string& path)
+{
+  return extension_of(path) == "cue";
 }
 
 Playlist::Playlist()
@@ -165,7 +175,9 @@ Playlist::Playlist()
 Playlist::~Playlist()
 {
   meta_idle_.disconnect();
+  cover_idle_.disconnect();
   meta_queue_.clear();
+  cover_queue_.clear();
   if (discoverer_) {
     gst_discoverer_stop(discoverer_);
     gst_object_unref(discoverer_);
@@ -176,7 +188,9 @@ Playlist::~Playlist()
 void Playlist::clear()
 {
   meta_idle_.disconnect();
+  cover_idle_.disconnect();
   meta_queue_.clear();
+  cover_queue_.clear();
   discovering_ = false;
   store_->clear();
   current_ = Gtk::TreeRowReference();
@@ -224,6 +238,22 @@ std::string Playlist::current_uri() const
   return iter_uri(current_iter());
 }
 
+gint64 Playlist::current_start_ns() const
+{
+  auto it = current_iter();
+  if (!it)
+    return 0;
+  return it->get_value(columns_.start_ns);
+}
+
+gint64 Playlist::current_stop_ns() const
+{
+  auto it = current_iter();
+  if (!it)
+    return 0;
+  return it->get_value(columns_.stop_ns);
+}
+
 void Playlist::set_current(int index)
 {
   if (index < 0 || index >= size()) {
@@ -246,17 +276,26 @@ void Playlist::set_current(const Gtk::TreeModel::Path& path)
   schedule_meta();
 }
 
-int Playlist::append_uri(const std::string& uri, const Glib::ustring& title)
+int Playlist::append_uri(const std::string& uri, const Glib::ustring& title, gint64 start_ns,
+                         gint64 stop_ns, bool cue, const Glib::ustring& artist)
 {
   if (uri.empty())
     return 0;
   auto row = *store_->append();
   row[columns_.uri] = uri;
   row[columns_.title] = title;
-  row[columns_.artist] = "";
+  row[columns_.artist] = artist;
   row[columns_.time] = "";
   row[columns_.duration_ns] = 0;
+  row[columns_.start_ns] = start_ns;
+  row[columns_.stop_ns] = stop_ns;
+  row[columns_.cue] = cue;
+  if (stop_ns > start_ns && start_ns >= 0) {
+    row[columns_.duration_ns] = stop_ns - start_ns;
+    row[columns_.time] = format_duration(stop_ns - start_ns);
+  }
   enqueue_meta(uri);
+  enqueue_cover(uri);
   return 1;
 }
 
@@ -266,6 +305,46 @@ void Playlist::enqueue_meta(const std::string& uri)
     return;
   meta_queue_.push_back(uri);
   schedule_meta();
+}
+
+void Playlist::enqueue_cover(const std::string& uri)
+{
+  if (uri.empty())
+    return;
+  cover_queue_.push_back(uri);
+  schedule_cover();
+}
+
+void Playlist::schedule_cover()
+{
+  if (cover_idle_.connected())
+    return;
+  cover_idle_ = Glib::signal_idle().connect([this]() {
+    pump_cover();
+    return !cover_queue_.empty();
+  });
+}
+
+void Playlist::pump_cover()
+{
+  if (cover_queue_.empty())
+    return;
+  const std::string uri = cover_queue_.front();
+  cover_queue_.pop_front();
+  Glib::RefPtr<Gdk::Pixbuf> pix;
+  auto cached = cover_cache_.find(uri);
+  if (cached != cover_cache_.end()) {
+    pix = cached->second;
+  } else {
+    pix = load_cover_thumb(uri, 32);
+    cover_cache_[uri] = pix;
+  }
+  if (!pix)
+    return;
+  for (auto& row : store_->children()) {
+    if (std::string(row.get_value(columns_.uri)) == uri)
+      row[columns_.cover] = pix;
+  }
 }
 
 void Playlist::schedule_meta()
@@ -337,18 +416,30 @@ void Playlist::apply_discoverer_info(GstDiscovererInfo* info)
     gst_tag_list_get_string(tags, GST_TAG_TITLE, &title);
     gst_tag_list_get_string(tags, GST_TAG_ARTIST, &artist);
   }
+  const gint64 file_dur = (dur != 0 && dur != GST_CLOCK_TIME_NONE) ? static_cast<gint64>(dur) : 0;
   for (auto& row : store_->children()) {
     if (std::string(row.get_value(columns_.uri)) != uri)
       continue;
-    if (title && *title)
-      row[columns_.title] = title;
-    if (artist && *artist)
-      row[columns_.artist] = artist;
-    if (dur != 0 && dur != GST_CLOCK_TIME_NONE) {
-      row[columns_.duration_ns] = static_cast<gint64>(dur);
-      row[columns_.time] = format_duration(static_cast<gint64>(dur));
+    const bool cue = row.get_value(columns_.cue);
+    if (!cue) {
+      if (title && *title)
+        row[columns_.title] = title;
+      if (artist && *artist)
+        row[columns_.artist] = artist;
     }
-    break;
+    gint64 start = row.get_value(columns_.start_ns);
+    gint64 stop = row.get_value(columns_.stop_ns);
+    if (cue && stop <= start && file_dur > start) {
+      stop = file_dur;
+      row[columns_.stop_ns] = stop;
+    }
+    if (cue && stop > start) {
+      row[columns_.duration_ns] = stop - start;
+      row[columns_.time] = format_duration(stop - start);
+    } else if (!cue && file_dur > 0) {
+      row[columns_.duration_ns] = file_dur;
+      row[columns_.time] = format_duration(file_dur);
+    }
   }
   g_free(title);
   g_free(artist);
@@ -376,18 +467,85 @@ int Playlist::add_audio_file(const std::string& path)
   return append_uri(uri, display_title(path));
 }
 
+gint64 taglib_duration_ns(const std::string& path)
+{
+  TagLib::FileRef ref(path.c_str(), true);
+  if (ref.isNull() || !ref.audioProperties())
+    return 0;
+  const int ms = ref.audioProperties()->lengthInMilliseconds();
+  if (ms <= 0)
+    return 0;
+  return static_cast<gint64>(ms) * 1000000LL;
+}
+
+int Playlist::add_cue(const std::string& path)
+{
+  if (!is_cue_path(path))
+    return 0;
+  const auto files = parse_cue_sheet(path);
+  int n = 0;
+  for (const auto& f : files) {
+    const std::string audio = resolve_existing_audio(fs::path(f.audio_path));
+    if (audio.empty())
+      continue;
+    const std::string uri = path_to_uri(audio);
+    if (uri.empty())
+      continue;
+    const gint64 file_dur = taglib_duration_ns(audio);
+    for (size_t i = 0; i < f.tracks.size(); ++i) {
+      const auto& t = f.tracks[i];
+      if (t.start_ns < 0)
+        continue;
+      gint64 stop = 0;
+      if (i + 1 < f.tracks.size() && f.tracks[i + 1].start_ns > t.start_ns)
+        stop = f.tracks[i + 1].start_ns;
+      else if (file_dur > t.start_ns)
+        stop = file_dur;
+      Glib::ustring title = t.title;
+      if (title.empty())
+        title = display_title(audio);
+      Glib::ustring artist = t.performer;
+      if (artist.empty())
+        artist = f.performer;
+      n += append_uri(uri, title, t.start_ns, stop, true, artist);
+    }
+  }
+  return n;
+}
+
 int Playlist::add_files(const std::vector<std::string>& paths)
 {
   std::vector<std::string> audio;
+  std::vector<std::string> cues;
+  std::vector<std::string> lists;
   audio.reserve(paths.size());
   for (const auto& p : paths) {
-    if (is_audio_path(p))
+    if (is_cue_path(p))
+      cues.push_back(p);
+    else if (is_m3u_path(p))
+      lists.push_back(p);
+    else if (is_audio_path(p))
       audio.push_back(p);
   }
+  std::sort(cues.begin(), cues.end());
   std::sort(audio.begin(), audio.end());
   int n = 0;
-  for (const auto& p : audio)
+  std::set<std::string> cue_audio;
+  for (const auto& c : cues) {
+    for (const auto& f : parse_cue_sheet(c)) {
+      const std::string a = resolve_existing_audio(fs::path(f.audio_path));
+      if (!a.empty())
+        cue_audio.insert(a);
+    }
+    n += add_cue(c);
+  }
+  for (const auto& m : lists)
+    n += add_m3u(m);
+  for (const auto& p : audio) {
+    if (cue_audio.count(p))
+      continue;
     n += add_audio_file(p);
+  }
   return n;
 }
 
@@ -419,14 +577,11 @@ int Playlist::add_folder(const std::string& dir)
     if (it.depth() > 1 || !it->is_regular_file(ec))
       continue;
     const std::string p = it->path().string();
-    if (is_audio_path(p))
+    if (is_cue_path(p) || is_audio_path(p) || is_m3u_path(p))
       audio.push_back(p);
   }
   std::sort(audio.begin(), audio.end());
-  int n = 0;
-  for (const auto& p : audio)
-    n += add_audio_file(p);
-  return n;
+  return add_files(audio);
 }
 
 int Playlist::add_m3u(const std::string& path)
@@ -483,9 +638,7 @@ int Playlist::add_dropped(const std::vector<Glib::ustring>& uris)
     std::error_code ec;
     if (fs::is_directory(path, ec))
       n += add_folder(path);
-    else if (is_m3u_path(path))
-      n += add_m3u(path);
-    else if (is_audio_path(path))
+    else if (is_m3u_path(path) || is_cue_path(path) || is_audio_path(path))
       files.push_back(path);
   }
   n += add_files(files);
@@ -577,10 +730,13 @@ void Playlist::update_current_meta(const Glib::ustring& title, const Glib::ustri
   auto it = current_iter();
   if (!it)
     return;
-  if (!title.empty())
-    it->set_value(columns_.title, title);
-  if (!artist.empty())
-    it->set_value(columns_.artist, artist);
+  const bool cue = it->get_value(columns_.cue);
+  if (!cue) {
+    if (!title.empty())
+      it->set_value(columns_.title, title);
+    if (!artist.empty())
+      it->set_value(columns_.artist, artist);
+  }
   if (duration_ns > 0) {
     it->set_value(columns_.duration_ns, duration_ns);
     it->set_value(columns_.time, format_duration(duration_ns));

@@ -104,7 +104,7 @@ Player::~Player()
   }
 }
 
-bool Player::open(const std::string& path_or_uri)
+bool Player::open(const std::string& path_or_uri, gint64 start_ns, gint64 stop_ns)
 {
   if (!playbin_) {
     signal_error_.emit("playbin is not available");
@@ -120,8 +120,27 @@ bool Player::open(const std::string& path_or_uri)
   uri_ = uri;
   position_ = 0;
   duration_ = 0;
+  clip_start_ = start_ns > 0 ? start_ns : 0;
+  clip_stop_ = (stop_ns > clip_start_) ? stop_ns : 0;
+  pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+  clip_eos_sent_ = false;
   g_object_set(playbin_, "uri", uri_.c_str(), "volume", volume_, nullptr);
   return true;
+}
+
+void Player::apply_clip_seek()
+{
+  if (!playbin_ || !pending_clip_seek_)
+    return;
+  pending_clip_seek_ = false;
+  const GstSeekFlags flags =
+      static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE);
+  if (clip_stop_ > clip_start_) {
+    gst_element_seek(playbin_, 1.0, GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, clip_start_,
+                     GST_SEEK_TYPE_SET, clip_stop_);
+  } else if (clip_start_ > 0) {
+    gst_element_seek_simple(playbin_, GST_FORMAT_TIME, flags, clip_start_);
+  }
 }
 
 void Player::play()
@@ -153,9 +172,12 @@ void Player::seek(gint64 ns)
 {
   if (!playbin_ || uri_.empty() || ns < 0)
     return;
+  gint64 abs = clip_start_ + ns;
+  if (clip_stop_ > clip_start_ && abs > clip_stop_)
+    abs = clip_stop_;
   gst_element_seek_simple(playbin_, GST_FORMAT_TIME,
-                          static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT),
-                          ns);
+                          static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
+                          abs);
 }
 
 void Player::set_volume(double volume)
@@ -223,11 +245,24 @@ void Player::query_position()
   gint64 pos = 0;
   gint64 dur = 0;
   if (!gst_element_query_position(playbin_, GST_FORMAT_TIME, &pos))
-    pos = position_;
+    pos = position_ + clip_start_;
   if (!gst_element_query_duration(playbin_, GST_FORMAT_TIME, &dur))
     dur = duration_;
-  position_ = pos;
-  duration_ = dur;
+  if (clip_stop_ > clip_start_ && pos >= clip_stop_ - (GST_MSECOND * 80) && !clip_eos_sent_ &&
+      state_ == State::Playing) {
+    clip_eos_sent_ = true;
+    signal_eos_.emit();
+    return;
+  }
+  if (pos < clip_start_)
+    pos = clip_start_;
+  position_ = pos - clip_start_;
+  if (clip_stop_ > clip_start_)
+    duration_ = clip_stop_ - clip_start_;
+  else if (dur > clip_start_)
+    duration_ = dur - clip_start_;
+  else
+    duration_ = dur;
   signal_position_changed_.emit(position_, duration_);
 }
 
@@ -270,6 +305,8 @@ gboolean Player::on_bus(GstBus*, GstMessage* msg, gpointer self)
         p->set_state(State::Paused);
       else if (new_st == GST_STATE_NULL || new_st == GST_STATE_READY)
         p->set_state(State::Stopped);
+      if (new_st == GST_STATE_PAUSED && p->pending_clip_seek_)
+        p->apply_clip_seek();
       if (new_st == GST_STATE_PLAYING || new_st == GST_STATE_PAUSED)
         p->query_position();
       break;
