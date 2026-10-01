@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v1.1.0**. Last updated: 2026-09-26.
+Current release: **v1.1.1**. Last updated: 2026-10-01.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -28,6 +28,8 @@ None.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.1** — Headless meson test suite, and known defects recorded in BUG-BACKLOG.md.
 
 **v1.1.0** — Playlist cover column (32px TagLib/sidecar thumbs). CUE sheets expand to TITLE/PERFORMER tracks; playbin seeks INDEX 01 ranges.
 
