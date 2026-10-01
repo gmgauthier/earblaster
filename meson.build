@@ -80,3 +80,12 @@ install_data(
   rename: 'earblaster.svg',
   install_dir: get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps',
 )
+
+earblaster_tests = executable(
+  'earblaster-tests',
+  'tests/test_cue.cpp',
+  'src/cue_sheet.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('cue', earblaster_tests)
