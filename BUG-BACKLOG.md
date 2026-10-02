@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`). It checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, and absolute paths. It does not treat a UTF-8 BOM as a successful parse. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`). It checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. Nothing in `src/` shells out.
 
 ## Open
-
-### A UTF-8 BOM makes the cue sheet empty
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/cue_sheet.cpp:110`
-- Trigger: A `.cue` whose first bytes are `EF BB BF`, then a valid `FILE` / `TRACK` / `INDEX 01`.
-- Outcome: `ifstream::peek()` returns `int` `0xEF`. `'\xEF'` is a signed char on this ABI, so the comparison is false and the BOM is left in the first line. `FILE` is not recognized. `parse_cue_sheet` returns no tracks, and the sheet is ignored.
 
 ### Stop then Play drops the CUE chapter range
 
@@ -104,4 +96,12 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Closed
 
-None.
+### A UTF-8 BOM makes the cue sheet empty
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/cue_sheet.cpp` `parse_cue_sheet`
+- Trigger: A `.cue` whose first bytes are `EF BB BF`, then a valid `FILE` / `TRACK` / `INDEX 01`.
+- Outcome: `ifstream::peek()` returns `int` `0xEF`. `'\xEF'` is a signed char on this ABI, so the comparison is false and the BOM is left in the first line. `FILE` is not recognized. `parse_cue_sheet` returns no tracks, and the sheet is ignored.
+- Fixed in v1.1.2: The leading UTF-8 BOM is recognized as the integer `0xEF` and skipped. A sheet that only starts with `EF BB` and a different third byte is left unchanged.
+
