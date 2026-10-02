@@ -6,14 +6,6 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Open
 
-### Windows absolute FILE paths in a CUE never resolve
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/cue_sheet.cpp:127`
-- Trigger: A sheet next to `album.flac` whose line is `FILE "D:\Music\Album\album.flac" WAVE`.
-- Outcome: Backslashes become slashes, then a drive letter (`name[1] == ':'`) is stored as absolute with no basename fallback. The path is `D:/Music/Album/album.flac`. On Linux that file is not found and `add_cue` adds nothing. Relative names and backslash-relative names are joined to the sheet directory.
-
 ### Restored window position ignores negative coordinates
 
 - Severity: incorrect
@@ -55,6 +47,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Windows absolute FILE paths in a CUE never resolve
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/cue_sheet.cpp:127`
+- Trigger: A sheet next to `album.flac` whose line is `FILE "D:\Music\Album\album.flac" WAVE`.
+- Outcome: Backslashes become slashes, then a drive letter (`name[1] == ':'`) is stored as absolute with no basename fallback. The path is `D:/Music/Album/album.flac`. On Linux that file is not found and `add_cue` adds nothing. Relative names and backslash-relative names are joined to the sheet directory.
+- Fixed in v1.1.8: A drive-letter (`D:\\...`, `c:/...`) or UNC (`\\\\server\\...`) `FILE` name resolves to its file name in the sheet's directory. POSIX absolute names and relative names (with either slash) are unchanged.
 
 ### Save Playlist throws away CUE ranges
 

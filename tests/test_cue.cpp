@@ -100,6 +100,38 @@ int main()
   write_file(cue, std::string("\xEF\xBB\x00") + "FILE \"a.mp3\" MP3\nTRACK 01 AUDIO\nINDEX 01 00:00:00\n");
   CHECK(earblaster::parse_cue_sheet(cue).empty());
 
+  /* A Windows drive-letter path resolves to the same file name next to the sheet. */
+  write_file(cue,
+             "FILE \"D:\\Music\\Album\\album.flac\" WAVE\n"
+             "TRACK 01 AUDIO\n"
+             "INDEX 01 00:00:00\n");
+  {
+    const auto files = earblaster::parse_cue_sheet(cue);
+    CHECK(files.size() == 1);
+    CHECK(files[0].audio_path == dir + "/album.flac");
+  }
+  write_file(cue, "FILE \"c:/Music/album.flac\" WAVE\nTRACK 01 AUDIO\nINDEX 01 00:00:00\n");
+  {
+    const auto files = earblaster::parse_cue_sheet(cue);
+    CHECK(files.size() == 1);
+    CHECK(files[0].audio_path == dir + "/album.flac");
+  }
+  /* A UNC share path does the same. */
+  write_file(cue,
+             "FILE \"\\\\nas\\music\\album.flac\" WAVE\nTRACK 01 AUDIO\nINDEX 01 00:00:00\n");
+  {
+    const auto files = earblaster::parse_cue_sheet(cue);
+    CHECK(files.size() == 1);
+    CHECK(files[0].audio_path == dir + "/album.flac");
+  }
+  /* A backslash-relative name still joins the sheet directory. */
+  write_file(cue, "FILE \"disc1\\album.flac\" WAVE\nTRACK 01 AUDIO\nINDEX 01 00:00:00\n");
+  {
+    const auto files = earblaster::parse_cue_sheet(cue);
+    CHECK(files.size() == 1);
+    CHECK(files[0].audio_path == dir + "/disc1/album.flac");
+  }
+
   std::remove(cue.c_str());
   rmdir(dir.c_str());
   return suite_test::done("cue");
