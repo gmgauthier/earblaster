@@ -28,7 +28,7 @@ class Application : public Gtk::Application {
   void close_open_socket();
   bool send_paths_to_primary() const;
   bool on_listen_io(Glib::IOCondition cond);
-  void handle_open_payload(const std::string& payload);
+  void handle_open_paths(const std::vector<std::string>& raw);
   void ensure_window();
   static std::string runtime_dir();
   static std::string lock_path();
