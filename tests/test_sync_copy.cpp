@@ -71,14 +71,15 @@ void test_symlink_loop_terminates()
 
   auto cancel = Gio::Cancellable::create();
   int files = 0;
-  bool ok = false;
+  earblaster::SyncCopyStats st;
   try {
-    ok = earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel,
+    st = earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel,
                                     [&](const Glib::ustring&) { ++files; });
   } catch (const Glib::Error& e) {
     std::cerr << "copy threw: " << e.what() << "\n";
   }
-  CHECK(ok);
+  CHECK(st.copied == 2);
+  CHECK(st.failed == 0);
   CHECK(fs::is_regular_file(dest / "album" / "01.flac"));
   CHECK(fs::is_regular_file(dest / "album" / "sub" / "02.flac"));
   CHECK(!fs::exists(dest / "album" / "loop" / "loop"));
@@ -102,9 +103,82 @@ void test_symlink_to_outside_folder_is_copied()
   fs::create_directories(dest);
 
   auto cancel = Gio::Cancellable::create();
-  CHECK(earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel, [](const Glib::ustring&) {}));
+  CHECK(earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel, [](const Glib::ustring&) {})
+            .copied == 2);
   CHECK(fs::is_regular_file(dest / "album" / "a.flac"));
   CHECK(fs::is_regular_file(dest / "album" / "bonus" / "b.flac"));
+}
+
+void test_failed_folder_copy_can_be_resumed()
+{
+  /* One file fails mid-folder: the rest of the folder is still copied, no
+   * partial file is left, and a retry copies only what is missing. */
+  TempDir t("resume");
+  const fs::path album = t.root / "src" / "album";
+  fs::create_directories(album);
+  write_file(album / "01.flac");
+  write_file(album / "02.flac");
+  write_file(album / "03.flac");
+  const fs::path dest = t.root / "dest";
+  fs::create_directories(dest);
+  fs::permissions(album / "02.flac", fs::perms::none);
+  const bool can_fail = !std::ifstream(album / "02.flac").good(); /* false when run as root */
+
+  auto cancel = Gio::Cancellable::create();
+  earblaster::SyncCopyStats first;
+  try {
+    first = earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel,
+                                       [](const Glib::ustring&) {});
+  } catch (const Glib::Error& e) {
+    std::cerr << "copy threw: " << e.what() << "\n";
+    CHECK(false);
+  }
+  CHECK(fs::is_regular_file(dest / "album" / "01.flac"));
+  CHECK(fs::is_regular_file(dest / "album" / "03.flac"));
+  if (can_fail) {
+    CHECK(first.failed == 1);
+    CHECK(first.copied == 2);
+    CHECK(!first.error.empty());
+    CHECK(!fs::exists(dest / "album" / "02.flac"));
+  }
+
+  fs::permissions(album / "02.flac", fs::perms::owner_read | fs::perms::owner_write);
+  const auto retry =
+      earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel, [](const Glib::ustring&) {});
+  CHECK(fs::is_regular_file(dest / "album" / "02.flac"));
+  CHECK(retry.failed == 0);
+  CHECK(retry.copied == (can_fail ? 1 : 0));
+  CHECK(retry.existed == (can_fail ? 2 : 3));
+  CHECK(!retry.cancelled);
+}
+
+void test_existing_item_is_reported_as_existing()
+{
+  TempDir t("exists");
+  const fs::path src = t.root / "src";
+  fs::create_directories(src / "album");
+  write_file(src / "album" / "a.flac");
+  write_file(src / "single.flac");
+  const fs::path dest = t.root / "dest";
+  fs::create_directories(dest / "album");
+  write_file(dest / "album" / "a.flac", "old");
+  write_file(dest / "single.flac", "old");
+  auto cancel = Gio::Cancellable::create();
+
+  const auto folder =
+      earblaster::sync_copy_tree(gfile(src / "album"), gfile(dest), cancel, [](const Glib::ustring&) {});
+  CHECK(folder.copied == 0);
+  CHECK(folder.existed == 1);
+  CHECK(folder.failed == 0);
+  const auto single =
+      earblaster::sync_copy_tree(gfile(src / "single.flac"), gfile(dest), cancel, [](const Glib::ustring&) {});
+  CHECK(single.copied == 0);
+  CHECK(single.existed == 1);
+  /* Existing files are never overwritten. */
+  std::ifstream in(dest / "single.flac");
+  std::string body;
+  in >> body;
+  CHECK(body == "old");
 }
 
 }  // namespace
@@ -114,5 +188,7 @@ int main()
   Gio::init();
   test_symlink_loop_terminates();
   test_symlink_to_outside_folder_is_copied();
+  test_failed_folder_copy_can_be_resumed();
+  test_existing_item_is_reported_as_existing();
   return suite_test::done("sync_copy");
 }

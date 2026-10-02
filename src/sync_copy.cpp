@@ -21,10 +21,22 @@ std::string folder_id(const Glib::RefPtr<Gio::FileInfo>& info)
   return info->get_attribute_string("id::file");
 }
 
-bool copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
+void copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
                   const Glib::RefPtr<Gio::Cancellable>& cancellable,
                   const sigc::slot<void, Glib::ustring>& on_file,
-                  std::vector<std::string>& ancestors);
+                  std::vector<std::string>& ancestors, SyncCopyStats& st);
+
+bool is_cancelled(const Glib::RefPtr<Gio::Cancellable>& cancellable)
+{
+  return cancellable && cancellable->is_cancelled();
+}
+
+void note_failure(SyncCopyStats& st, const Glib::ustring& what)
+{
+  ++st.failed;
+  if (st.error.empty())
+    st.error = what;
+}
 
 }  // namespace
 
@@ -45,45 +57,79 @@ bool sync_dir_type(Gio::FileType type)
   return type == Gio::FILE_TYPE_DIRECTORY || type == Gio::FILE_TYPE_MOUNTABLE;
 }
 
-bool sync_copy_tree(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
-                    const Glib::RefPtr<Gio::Cancellable>& cancellable,
-                    const sigc::slot<void, Glib::ustring>& on_file)
+SyncCopyStats sync_copy_tree(const Glib::RefPtr<Gio::File>& src,
+                             const Glib::RefPtr<Gio::File>& dest_dir,
+                             const Glib::RefPtr<Gio::Cancellable>& cancellable,
+                             const sigc::slot<void, Glib::ustring>& on_file)
 {
+  SyncCopyStats st;
   std::vector<std::string> ancestors;
-  return copy_tree_in(src, dest_dir, cancellable, on_file, ancestors);
+  copy_tree_in(src, dest_dir, cancellable, on_file, ancestors, st);
+  return st;
 }
 
 namespace {
 
-bool copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
+void copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
                   const Glib::RefPtr<Gio::Cancellable>& cancellable,
                   const sigc::slot<void, Glib::ustring>& on_file,
-                  std::vector<std::string>& ancestors)
+                  std::vector<std::string>& ancestors, SyncCopyStats& st)
 {
   if (!src || !dest_dir)
-    return false;
-  if (cancellable && cancellable->is_cancelled())
-    return false;
-  auto info = src->query_info(cancellable, kListAttrs);
-  if (!info)
-    return false;
-  const auto type = info->get_file_type();
+    return;
+  if (is_cancelled(cancellable))
+    return;
   const std::string name = src->get_basename();
   if (sync_name_skipped(name))
-    return false;
+    return;
+  Glib::RefPtr<Gio::FileInfo> info;
+  try {
+    info = src->query_info(cancellable, kListAttrs);
+  } catch (const Glib::Error& e) {
+    if (e.code() == Gio::Error::CANCELLED)
+      throw;
+    note_failure(st, e.what());
+    return;
+  }
+  if (!info)
+    return;
+  const auto type = info->get_file_type();
   auto dest = dest_dir->get_child(name);
-  if (dest->query_exists(cancellable))
-    return false;
+
   if (sync_dir_type(type)) {
     /* Enumeration follows symlinks, so a link to this folder or an ancestor
      * reports as a folder. Do not walk into a folder already being copied. */
     const std::string id = folder_id(info);
     if (!id.empty() && std::find(ancestors.begin(), ancestors.end(), id) != ancestors.end())
-      return false;
-    dest->make_directory(cancellable);
-    auto en = src->enumerate_children(cancellable, kListAttrs);
+      return;
+    /* An existing folder is merged so an interrupted copy can be resumed. */
+    if (dest->query_exists(cancellable)) {
+      if (!sync_dir_type(dest->query_file_type(Gio::FILE_QUERY_INFO_NONE, cancellable))) {
+        ++st.existed;
+        return;
+      }
+    } else {
+      try {
+        dest->make_directory(cancellable);
+        ++st.folders_created;
+      } catch (const Glib::Error& e) {
+        if (e.code() == Gio::Error::CANCELLED)
+          throw;
+        note_failure(st, e.what());
+        return;
+      }
+    }
+    Glib::RefPtr<Gio::FileEnumerator> en;
+    try {
+      en = src->enumerate_children(cancellable, kListAttrs);
+    } catch (const Glib::Error& e) {
+      if (e.code() == Gio::Error::CANCELLED)
+        throw;
+      note_failure(st, e.what());
+      return;
+    }
     if (!en)
-      return true;
+      return;
     ancestors.push_back(id);
     struct Pop {
       std::vector<std::string>& v;
@@ -93,22 +139,43 @@ bool copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::Fi
       }
     } pop{ancestors};
     while (auto child = en->next_file(cancellable)) {
-      if (cancellable && cancellable->is_cancelled())
-        return true;
+      if (is_cancelled(cancellable))
+        return;
       const std::string child_name = child->get_name();
       if (sync_name_skipped(child_name) || sync_info_hidden(child))
         continue;
       const auto ct = child->get_file_type();
       if (sync_dir_type(ct) || ct == Gio::FILE_TYPE_REGULAR)
-        copy_tree_in(src->get_child(child_name), dest, cancellable, on_file, ancestors);
+        copy_tree_in(src->get_child(child_name), dest, cancellable, on_file, ancestors, st);
     }
-    return true;
+    return;
   }
   if (type != Gio::FILE_TYPE_REGULAR)
-    return false;
+    return;
+  if (dest->query_exists(cancellable)) {
+    ++st.existed;
+    return;
+  }
   on_file(Glib::ustring(info->get_display_name().empty() ? name : info->get_display_name()));
-  src->copy(dest, [](goffset, goffset) {}, cancellable, Gio::FILE_COPY_NONE);
-  return true;
+  try {
+    src->copy(dest, [](goffset, goffset) {}, cancellable, Gio::FILE_COPY_NONE);
+    ++st.copied;
+  } catch (const Glib::Error& e) {
+    /* Never leave a partial file behind: a retry would take it as done. */
+    if (e.code() != Gio::Error::EXISTS) {
+      try {
+        dest->remove();
+      } catch (const Glib::Error&) {
+      }
+    }
+    if (e.code() == Gio::Error::CANCELLED)
+      throw;
+    if (e.code() == Gio::Error::EXISTS) {
+      ++st.existed;
+      return;
+    }
+    note_failure(st, e.what());
+  }
 }
 
 }  // namespace

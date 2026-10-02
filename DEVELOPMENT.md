@@ -97,7 +97,7 @@ earblaster
 │   ├── about_dialog.{hpp,cpp}
 │   ├── sync_devices.{hpp,cpp}   USB TRAN=usb + gio MTP
 │   └── sync_window.{hpp,cpp}    MC dual-pane Gio copy
-├── meson.build                 version 1.1.10
+├── meson.build                 version 1.1.11
 ├── README.md
 ├── INSTALL.md
 └── DEVELOPMENT.md
