@@ -6,14 +6,6 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Open
 
-### Cancelling a directory transfer can report success
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/sync_window.cpp:89`
-- Trigger: Tick one folder, Transfer, and close the Sync window while children are still copying, and that folder is the only job.
-- Outcome: Inside the child loop, cancel returns `true`. The caller counts that as a copied item, and `cancelled` is set only at the start of the next top-level item. The status line says `Copied 1 item(s).` The destination folder is incomplete.
-
 ### Second-instance socket commits a truncated path list
 
 - Severity: incorrect
@@ -23,6 +15,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Cancelling a directory transfer can report success
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/sync_window.cpp:89`
+- Trigger: Tick one folder, Transfer, and close the Sync window while children are still copying, and that folder is the only job.
+- Outcome: Inside the child loop, cancel returns `true`. The caller counts that as a copied item, and `cancelled` is set only at the start of the next top-level item. The status line says `Copied 1 item(s).` The destination folder is incomplete.
+- Fixed in v1.1.12: The folder copy reports cancellation in its result (whether it lands inside a file copy or between two files), and the window stops and says `Transfer cancelled.` instead of counting the folder as copied.
 
 ### A failed folder copy cannot be resumed
 

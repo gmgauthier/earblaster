@@ -181,6 +181,52 @@ void test_existing_item_is_reported_as_existing()
   CHECK(body == "old");
 }
 
+void test_cancel_during_folder_is_reported()
+{
+  /* Cancel while a folder's children are copying: the result says cancelled,
+   * not copied, and the remaining files are not written. */
+  TempDir t("cancel");
+  const fs::path album = t.root / "src" / "album";
+  fs::create_directories(album / "disc2");
+  for (const char* n : {"01.flac", "02.flac", "03.flac"})
+    write_file(album / n);
+  write_file(album / "disc2" / "04.flac");
+  const fs::path dest = t.root / "dest";
+  fs::create_directories(dest);
+
+  auto cancel = Gio::Cancellable::create();
+  int started = 0;
+  earblaster::SyncCopyStats st;
+  bool threw = false;
+  try {
+    st = earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel, [&](const Glib::ustring&) {
+      if (++started == 1)
+        cancel->cancel();
+    });
+  } catch (const Glib::Error&) {
+    threw = true;
+  }
+  CHECK(!threw);
+  CHECK(st.cancelled);
+  CHECK(started == 1);
+  CHECK(st.copied == 0);
+  /* The file whose copy was cut off is not left half-written. (Empty
+   * folders may remain; a later Transfer merges into them.) */
+  int files_left = 0;
+  for (const auto& e : fs::recursive_directory_iterator(dest))
+    if (e.is_regular_file())
+      ++files_left;
+  CHECK(files_left == 0);
+
+  /* Already cancelled before the folder starts. */
+  auto pre = Gio::Cancellable::create();
+  pre->cancel();
+  const auto st2 = earblaster::sync_copy_tree(gfile(album), gfile(t.root / "dest"), pre,
+                                              [](const Glib::ustring&) {});
+  CHECK(st2.cancelled);
+  CHECK(st2.copied == 0);
+}
+
 }  // namespace
 
 int main()
@@ -190,5 +236,6 @@ int main()
   test_symlink_to_outside_folder_is_copied();
   test_failed_folder_copy_can_be_resumed();
   test_existing_item_is_reported_as_existing();
+  test_cancel_during_folder_is_reported();
   return suite_test::done("sync_copy");
 }

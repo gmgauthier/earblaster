@@ -64,7 +64,16 @@ SyncCopyStats sync_copy_tree(const Glib::RefPtr<Gio::File>& src,
 {
   SyncCopyStats st;
   std::vector<std::string> ancestors;
-  copy_tree_in(src, dest_dir, cancellable, on_file, ancestors, st);
+  try {
+    copy_tree_in(src, dest_dir, cancellable, on_file, ancestors, st);
+  } catch (const Glib::Error& e) {
+    if (e.code() != Gio::Error::CANCELLED)
+      throw;
+    st.cancelled = true;
+  }
+  /* Cancel can land between two files, where nothing throws. */
+  if (is_cancelled(cancellable))
+    st.cancelled = true;
   return st;
 }
 
