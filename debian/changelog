@@ -1,3 +1,9 @@
+earblaster (1.1.12-1) unstable; urgency=medium
+
+  * Report a cancelled Sync folder transfer as cancelled.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:51:29 +0100
+
 earblaster (1.1.11-1) unstable; urgency=medium
 
   * Let a failed Sync folder copy be resumed.

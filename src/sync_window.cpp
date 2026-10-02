@@ -494,6 +494,11 @@ void SyncWindow::run_copy()
           }
           progress_.emit();
         });
+        if (st.cancelled) {
+          /* A folder cut off part-way is not a copied item. */
+          cancelled = true;
+          break;
+        }
         if (st.failed > 0) {
           /* Files that did copy stay; a second Transfer copies the rest. */
           ++failed;
