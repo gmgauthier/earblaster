@@ -265,6 +265,83 @@ void test_cue_plus_its_audio_adds_only_chapters(const Fixture& fx)
   std::remove(cue.c_str());
 }
 
+struct RowData {
+  std::string uri;
+  std::string title;
+  std::string artist;
+  gint64 start_ns;
+  gint64 stop_ns;
+  bool cue;
+};
+
+std::vector<RowData> dump(earblaster::Playlist& pl)
+{
+  std::vector<RowData> out;
+  const auto& c = pl.columns();
+  for (const auto& row : pl.store()->children())
+    out.push_back({std::string(row.get_value(c.uri)), std::string(row.get_value(c.title)),
+                   std::string(row.get_value(c.artist)), row.get_value(c.start_ns),
+                   row.get_value(c.stop_ns), row.get_value(c.cue)});
+  return out;
+}
+
+void test_save_playlist_keeps_cue_ranges(const Fixture& fx)
+{
+  /* Save Playlist, reload: chapter rows keep their range, title, and artist. */
+  const std::string cue = (fx.dir / "ranges.cue").string();
+  {
+    std::ofstream out(cue);
+    out << "PERFORMER \"Band\"\n"
+        << "FILE \"track2.wav\" WAVE\n"
+        << "  TRACK 01 AUDIO\n    TITLE \"Intro\"\n    INDEX 01 00:00:00\n"
+        << "  TRACK 02 AUDIO\n    TITLE \"Middle - Part\"\n    INDEX 01 00:00:20\n"
+        << "  TRACK 03 AUDIO\n    TITLE \"End\"\n    INDEX 01 00:00:50\n";
+  }
+  earblaster::Playlist pl;
+  CHECK(pl.add_cue(cue) == 3);
+  CHECK(pl.add_audio_file(fx.files[2]) == 1);
+  const auto before = dump(pl);
+  CHECK(before[1].start_ns > 0);
+
+  const std::string m3u = (fx.dir / "saved.m3u").string();
+  CHECK(pl.save_m3u(m3u));
+
+  earblaster::Playlist back;
+  CHECK(back.add_m3u(m3u) == 4);
+  const auto after = dump(back);
+  CHECK(after.size() == before.size());
+  for (size_t i = 0; i < before.size() && i < after.size(); ++i) {
+    CHECK(after[i].uri == before[i].uri);
+    CHECK(after[i].start_ns == before[i].start_ns);
+    CHECK(after[i].stop_ns == before[i].stop_ns);
+    CHECK(after[i].cue == before[i].cue);
+    if (before[i].cue) {
+      CHECK(after[i].title == before[i].title);
+      CHECK(after[i].artist == before[i].artist);
+    }
+  }
+  std::remove(cue.c_str());
+  std::remove(m3u.c_str());
+}
+
+void test_plain_m3u_still_loads(const Fixture& fx)
+{
+  const std::string m3u = (fx.dir / "plain.m3u").string();
+  {
+    std::ofstream out(m3u);
+    out << "#EXTM3U\n#EXTINF:1,Whatever\ntrack1.wav\ntrack2.wav\n";
+  }
+  earblaster::Playlist pl;
+  CHECK(pl.add_m3u(m3u) == 2);
+  const auto rows = dump(pl);
+  for (const auto& r : rows) {
+    CHECK(!r.cue);
+    CHECK(r.start_ns == 0);
+    CHECK(r.stop_ns == 0);
+  }
+  std::remove(m3u.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -282,6 +359,8 @@ int main(int argc, char** argv)
   test_shuffle_history_survives_reorder(fx);
   test_shuffle_history_skips_removed_row(fx);
   test_cue_plus_its_audio_adds_only_chapters(fx);
+  test_save_playlist_keeps_cue_ranges(fx);
+  test_plain_m3u_still_loads(fx);
 
   return suite_test::done("playlist");
 }

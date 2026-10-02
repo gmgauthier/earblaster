@@ -147,6 +147,46 @@ std::string resolve_existing_audio(fs::path item)
   return {};
 }
 
+/* Nanoseconds as exact decimal seconds, e.g. 20000000000 -> "20.000000000". */
+std::string ns_to_seconds(gint64 ns)
+{
+  if (ns < 0)
+    ns = 0;
+  std::string frac = std::to_string(ns % 1000000000LL);
+  frac.insert(0, 9 - frac.size(), '0');
+  return std::to_string(ns / 1000000000LL) + "." + frac;
+}
+
+/* Decimal seconds ("20", "20.5", "20.000000001") to nanoseconds; -1 if bad. */
+gint64 seconds_to_ns(const std::string& text)
+{
+  const std::string t = trim(text);
+  if (t.empty())
+    return -1;
+  size_t i = 0;
+  gint64 whole = 0;
+  bool digits = false;
+  while (i < t.size() && std::isdigit(static_cast<unsigned char>(t[i]))) {
+    whole = whole * 10 + (t[i] - '0');
+    digits = true;
+    ++i;
+  }
+  gint64 frac = 0;
+  gint64 scale = 100000000LL;
+  if (i < t.size() && t[i] == '.') {
+    ++i;
+    while (i < t.size() && std::isdigit(static_cast<unsigned char>(t[i]))) {
+      frac += (t[i] - '0') * scale;
+      scale /= 10;
+      digits = true;
+      ++i;
+    }
+  }
+  if (!digits || i != t.size())
+    return -1;
+  return whole * 1000000000LL + frac;
+}
+
 /* Same file spelled differently (relative, `..`, symlinked dir) compares equal. */
 std::string canonical_or_same(const std::string& path)
 {
@@ -615,10 +655,34 @@ int Playlist::add_m3u(const std::string& path)
   const fs::path base = fs::path(path).parent_path();
   int n = 0;
   std::string line;
+  /* Extended lines apply to the next path entry. */
+  Glib::ustring ext_title;
+  Glib::ustring ext_artist;
+  gint64 ext_start = -1;
+  gint64 ext_stop = 0;
+  auto reset_ext = [&]() {
+    ext_title.clear();
+    ext_artist.clear();
+    ext_start = -1;
+    ext_stop = 0;
+  };
   while (std::getline(in, line)) {
     line = trim(line);
-    if (line.empty() || line[0] == '#')
+    if (line.empty())
       continue;
+    if (line[0] == '#') {
+      if (line.compare(0, 8, "#EXTINF:") == 0) {
+        const auto comma = line.find(',');
+        ext_title = comma == std::string::npos ? std::string() : trim(line.substr(comma + 1));
+      } else if (line.compare(0, 8, "#EXTART:") == 0) {
+        ext_artist = trim(line.substr(8));
+      } else if (line.compare(0, 22, "#EXTVLCOPT:start-time=") == 0) {
+        ext_start = seconds_to_ns(line.substr(22));
+      } else if (line.compare(0, 21, "#EXTVLCOPT:stop-time=") == 0) {
+        ext_stop = seconds_to_ns(line.substr(21));
+      }
+      continue;
+    }
     if (line.size() >= 2 && ((line.front() == '"' && line.back() == '"') ||
                              (line.front() == '\'' && line.back() == '\'')))
       line = trim(line.substr(1, line.size() - 2));
@@ -643,9 +707,19 @@ int Playlist::add_m3u(const std::string& path)
     if (!ec)
       item = canon;
     const std::string resolved = resolve_existing_audio(item);
-    if (resolved.empty())
+    if (resolved.empty()) {
+      reset_ext();
       continue;
-    n += add_audio_file(resolved);
+    }
+    if (ext_start >= 0) {
+      /* A saved chapter row: restore its range instead of the whole file. */
+      const gint64 stop = ext_stop > ext_start ? ext_stop : 0;
+      const Glib::ustring title = ext_title.empty() ? display_title(resolved) : ext_title;
+      n += append_uri(path_to_uri(resolved), title, ext_start, stop, true, ext_artist);
+    } else {
+      n += add_audio_file(resolved);
+    }
+    reset_ext();
   }
   if (n == 0 && !base.empty())
     n += add_folder(base.string());
@@ -676,6 +750,21 @@ bool Playlist::save_m3u(const std::string& path) const
   out << "#EXTM3U\n";
   for (const auto& row : store_->children()) {
     const std::string uri = std::string(row.get_value(columns_.uri));
+    if (row.get_value(columns_.cue)) {
+      /* Chapter rows keep their range, title, and artist. The range uses the
+       * VLC option lines so other players can honour it too. */
+      const gint64 start = row.get_value(columns_.start_ns);
+      const gint64 stop = row.get_value(columns_.stop_ns);
+      const gint64 dur = row.get_value(columns_.duration_ns);
+      const gint64 secs = dur > 0 ? (dur + 500000000LL) / 1000000000LL : -1;
+      out << "#EXTINF:" << secs << ',' << std::string(row.get_value(columns_.title)) << '\n';
+      const std::string artist = std::string(row.get_value(columns_.artist));
+      if (!artist.empty())
+        out << "#EXTART:" << artist << '\n';
+      out << "#EXTVLCOPT:start-time=" << ns_to_seconds(start) << '\n';
+      if (stop > start)
+        out << "#EXTVLCOPT:stop-time=" << ns_to_seconds(stop) << '\n';
+    }
     out << uri_to_path(uri) << '\n';
   }
   return static_cast<bool>(out);

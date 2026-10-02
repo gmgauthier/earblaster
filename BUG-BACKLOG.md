@@ -6,14 +6,6 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Open
 
-### Save Playlist throws away CUE ranges
-
-- Severity: data-loss
-- Confidence: high
-- Where: `src/playlist.cpp:654`
-- Trigger: Load a `.cue` with several `INDEX 01` tracks, File → Save Playlist, open that `.m3u`.
-- Outcome: Each row is written as a path. `start_ns` and `stop_ns` are not written. Reload plays the full file once per chapter, from the start, back to back. Titles and chapter bounds are gone.
-
 ### Windows absolute FILE paths in a CUE never resolve
 
 - Severity: incorrect
@@ -63,6 +55,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Save Playlist throws away CUE ranges
+
+- Severity: data-loss
+- Confidence: high
+- Where: `src/playlist.cpp:654`
+- Trigger: Load a `.cue` with several `INDEX 01` tracks, File → Save Playlist, open that `.m3u`.
+- Outcome: Each row is written as a path. `start_ns` and `stop_ns` are not written. Reload plays the full file once per chapter, from the start, back to back. Titles and chapter bounds are gone.
+- Fixed in v1.1.7: Chapter rows are saved with `#EXTINF` (title), `#EXTART` (artist), and `#EXTVLCOPT:start-time` / `stop-time` in exact decimal seconds. Loading such a playlist restores each chapter row with its range, title, and artist. Plain M3U files load as before.
 
 ### Opening a CUE plus its audio file adds the full file again
 
