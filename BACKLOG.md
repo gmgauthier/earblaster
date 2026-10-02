@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v1.1.2**. Last updated: 2026-10-02.
+Current release: **v1.1.3**. Last updated: 2026-10-02.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -28,6 +28,8 @@ None.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.3** — Stop, then Play, seeks back to the same CUE chapter.
 
 **v1.1.2** — A cue sheet that starts with a UTF-8 BOM still loads its tracks.
 

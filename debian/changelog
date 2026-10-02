@@ -1,3 +1,9 @@
+earblaster (1.1.3-1) unstable; urgency=medium
+
+  * Arm the chapter seek again after Stop.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 08:59:50 +0100
+
 earblaster (1.1.2-1) unstable; urgency=medium
 
   * Skip a UTF-8 BOM at the start of a cue sheet.
