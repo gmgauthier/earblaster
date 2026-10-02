@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '1.1.8',
+  version: '1.1.9',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -109,3 +109,12 @@ playlist_tests = executable(
   dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
 )
 test('playlist', playlist_tests)
+
+settings_tests = executable(
+  'earblaster-settings-tests',
+  'tests/test_settings.cpp',
+  'src/settings.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('settings', settings_tests)

@@ -9,8 +9,11 @@ namespace earblaster {
 struct Settings {
   static constexpr int kEqBands = 10;
 
-  int window_x = -1;
-  int window_y = -1;
+  /* Any coordinate is valid (x or y < 0 on a monitor left of / above the
+   * primary), so whether a position was saved is its own flag. */
+  bool has_position = false;
+  int window_x = 0;
+  int window_y = 0;
   int window_w = 800;
   int window_h = 534;
   double volume = 0.8;
