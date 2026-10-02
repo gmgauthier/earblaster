@@ -3,6 +3,7 @@
 #include "application.hpp"
 #include "main_window.hpp"
 #include "config.hpp"
+#include "open_payload.hpp"
 
 #include <fcntl.h>
 #include <sys/file.h>
@@ -151,14 +152,12 @@ bool Application::send_paths_to_primary() const
       g_usleep(20000);
       continue;
     }
-    for (const auto& p : open_paths_) {
-      if (::write(fd, p.data(), p.size()) != static_cast<ssize_t>(p.size()))
-        break;
-      if (::write(fd, "\n", 1) != 1)
-        break;
-    }
+    /* The whole list goes, or the primary sees no end marker and ignores it. */
+    const bool sent = write_all(fd, encode_open_payload(open_paths_));
     close(fd);
-    return true;
+    if (!sent)
+      std::cerr << "earblaster: could not hand the file list to the running window\n";
+    return sent;
   }
   return false;
 }
@@ -173,34 +172,25 @@ bool Application::on_listen_io(Glib::IOCondition)
     return true;
 
   std::string buf;
-  char tmp[4096];
-  ssize_t n = 0;
-  while ((n = ::read(cfd, tmp, sizeof(tmp))) > 0) {
-    buf.append(tmp, static_cast<size_t>(n));
-    if (buf.size() > 1024 * 1024)
-      break;
-  }
+  const bool read_ok = read_all(cfd, buf);
   close(cfd);
-  handle_open_payload(buf);
+  std::vector<std::string> paths;
+  if (!read_ok || !decode_open_payload(buf, paths)) {
+    /* Cut off or oversized: keep the current playlist rather than replace it
+     * with part of a list. */
+    std::cerr << "earblaster: ignored an incomplete file list from a second launch\n";
+    paths.clear();
+  }
+  handle_open_paths(paths);
   return true;
 }
 
-void Application::handle_open_payload(const std::string& payload)
+void Application::handle_open_paths(const std::vector<std::string>& raw)
 {
   std::vector<std::string> paths;
-  std::string line;
-  for (char ch : payload) {
-    if (ch == '\n' || ch == '\0') {
-      if (!line.empty()) {
-        paths.push_back(canonicalize_arg(line));
-        line.clear();
-      }
-    } else {
-      line += ch;
-    }
-  }
-  if (!line.empty())
-    paths.push_back(canonicalize_arg(line));
+  paths.reserve(raw.size());
+  for (const auto& p : raw)
+    paths.push_back(canonicalize_arg(p));
 
   ensure_window();
   if (window_ == nullptr)

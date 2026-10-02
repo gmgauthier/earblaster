@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '1.1.12',
+  version: '1.1.13',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -34,6 +34,7 @@ executable(
   'earblaster',
   'src/main.cpp',
   'src/application.cpp',
+  'src/open_payload.cpp',
   'src/paths.cpp',
   'src/main_window.cpp',
   'src/seal_view.cpp',
@@ -128,3 +129,12 @@ sync_copy_tests = executable(
   dependencies: [gtkmm],
 )
 test('sync_copy', sync_copy_tests, timeout: 60)
+
+open_payload_tests = executable(
+  'earblaster-open-payload-tests',
+  'tests/test_open_payload.cpp',
+  'src/open_payload.cpp',
+  include_directories: inc,
+  dependencies: [dependency('threads')],
+)
+test('open_payload', open_payload_tests)

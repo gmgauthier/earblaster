@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v1.1.12**. Last updated: 2026-10-02.
+Current release: **v1.1.13**. Last updated: 2026-10-02.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -28,6 +28,8 @@ None.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.13** — A second launch with a very long file list no longer replaces the playlist with a cut-off list.
 
 **v1.1.12** — Closing the Sync window mid-folder reports the transfer as cancelled, not copied.
 

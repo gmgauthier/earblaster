@@ -2,9 +2,13 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), and `tests/test_sync_copy.cpp` (`sync_copy`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
+
+None.
+
+## Closed
 
 ### Second-instance socket commits a truncated path list
 
@@ -13,8 +17,7 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Where: `src/application.cpp:160`, `src/application.cpp:180`, `src/main_window.cpp:442`
 - Trigger: A second process hands the primary more than about 1 MB of newline-separated paths.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
-
-## Closed
+- Fixed in v1.1.13: The hand-off ends with an empty-line marker (`src/open_payload.cpp`). The sender writes the whole list through short writes and reports failure. The primary reads to EOF (64 MB cap) and only replaces the playlist when the list is complete; a cut-off or oversized list is ignored and the window is just raised.
 
 ### Cancelling a directory transfer can report success
 
