@@ -440,18 +440,9 @@ void MainWindow::open_paths(const std::vector<std::string>& paths)
   if (paths.empty())
     return;
   playlist_.clear();
-  int n = 0;
-  std::vector<std::string> files;
-  files.reserve(paths.size());
-  for (const auto& p : paths) {
-    if (Playlist::is_m3u_path(p))
-      n += playlist_.add_m3u(p);
-    else if (Playlist::is_cue_path(p))
-      n += playlist_.add_cue(p);
-    else
-      files.push_back(p);
-  }
-  n += playlist_.add_files(files);
+  /* add_files routes .cue, .m3u and audio together, so an audio file that a
+   * cue sheet in the same selection already claims is not added again. */
+  const int n = playlist_.add_files(paths);
   if (n <= 0) {
     set_status("No audio files in that selection.");
     sync_transport();
