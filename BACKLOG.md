@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v1.1.6**. Last updated: 2026-10-02.
+Current release: **v1.1.7**. Last updated: 2026-10-02.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -28,6 +28,8 @@ None.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.7** — Save Playlist keeps CUE chapter ranges, titles, and artists.
 
 **v1.1.6** — Opening a cue sheet together with its audio file adds only the chapter rows.
 
