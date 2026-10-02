@@ -487,15 +487,22 @@ void SyncWindow::run_copy()
       }
       try {
         auto src = Gio::File::create_for_uri(uri);
-        const bool copied =
-            sync_copy_tree(src, dest, cancellable_, [this](const Glib::ustring& name) {
-              {
-                std::lock_guard<std::mutex> lock(mu_);
-                progress_text_ = "Copying " + name;
-              }
-              progress_.emit();
-            });
-        if (copied) {
+        const auto st = sync_copy_tree(src, dest, cancellable_, [this](const Glib::ustring& name) {
+          {
+            std::lock_guard<std::mutex> lock(mu_);
+            progress_text_ = "Copying " + name;
+          }
+          progress_.emit();
+        });
+        if (st.failed > 0) {
+          /* Files that did copy stay; a second Transfer copies the rest. */
+          ++failed;
+          {
+            std::lock_guard<std::mutex> lock(mu_);
+            progress_text_ = st.error;
+          }
+          progress_.emit();
+        } else if (st.copied > 0 || st.folders_created > 0) {
           ++ok;
         } else {
           ++skipped;

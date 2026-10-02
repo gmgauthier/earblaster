@@ -17,10 +17,23 @@ bool sync_info_hidden(const Glib::RefPtr<Gio::FileInfo>& info);
 
 bool sync_dir_type(Gio::FileType type);
 
-/* Copy src (file or folder) into dest_dir under the same name.
- * Returns false if dest already has this name (file or folder). Does not merge. */
-bool sync_copy_tree(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
-                    const Glib::RefPtr<Gio::Cancellable>& cancellable,
-                    const sigc::slot<void, Glib::ustring>& on_file);
+/* What one top-level copy did. Counts are files; folders are merged. */
+struct SyncCopyStats {
+  int copied = 0;  /* files written */
+  int existed = 0; /* files (or the top-level item) already at the destination */
+  int failed = 0;  /* files that could not be copied */
+  int folders_created = 0;
+  bool cancelled = false;
+  std::string error; /* first failure message */
+};
+
+/* Copy src (file or folder) into dest_dir under the same name. An existing
+ * destination folder is merged: missing files are copied, existing files are
+ * left alone and counted in `existed`. A file that fails is removed from the
+ * destination and the rest of the folder is still copied, so a retry resumes. */
+SyncCopyStats sync_copy_tree(const Glib::RefPtr<Gio::File>& src,
+                             const Glib::RefPtr<Gio::File>& dest_dir,
+                             const Glib::RefPtr<Gio::Cancellable>& cancellable,
+                             const sigc::slot<void, Glib::ustring>& on_file);
 
 }  // namespace earblaster

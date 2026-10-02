@@ -6,14 +6,6 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Open
 
-### A failed folder copy cannot be resumed
-
-- Severity: data-loss
-- Confidence: high
-- Where: `src/sync_window.cpp:81`, `src/sync_window.cpp:96`
-- Trigger: Copy a folder of several files. One file fails after the destination directory has been created. Tick the same folder and Transfer again.
-- Outcome: `query_exists` on the destination name returns false from `copy_tree`, which the caller reports as "already exists". The child `copy_tree` result is ignored, and a throw from `src->copy` aborts the rest of that folder. The retry skips the whole tree. Those files stay off the device.
-
 ### Cancelling a directory transfer can report success
 
 - Severity: incorrect
@@ -31,6 +23,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### A failed folder copy cannot be resumed
+
+- Severity: data-loss
+- Confidence: high
+- Where: `src/sync_window.cpp:81`, `src/sync_window.cpp:96`
+- Trigger: Copy a folder of several files. One file fails after the destination directory has been created. Tick the same folder and Transfer again.
+- Outcome: `query_exists` on the destination name returns false from `copy_tree`, which the caller reports as "already exists". The child `copy_tree` result is ignored, and a throw from `src->copy` aborts the rest of that folder. The retry skips the whole tree. Those files stay off the device.
+- Fixed in v1.1.11: An existing destination folder is merged: missing files are copied and existing files are left alone. A file that fails is removed from the destination and the rest of the folder is still copied. The status line counts the folder as failed, and a second Transfer copies only what is missing.
 
 ### Sync follows a directory symlink and recurses forever
 
