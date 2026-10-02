@@ -79,6 +79,27 @@ int main()
   write_file(cue, "FILE \"a.mp3\" MP3\nTRACK 01 AUDIO\nINDEX 01 nope\n");
   CHECK(earblaster::parse_cue_sheet(cue).empty());
 
+  write_file(cue,
+             std::string("\xEF\xBB\xBF") + "PERFORMER \"The Band\"\r\n" +
+                 "FILE \"audio file.mp3\" MP3\r\n" + "TRACK 01 AUDIO\r\n" + "TITLE \"Bom\"\r\n" +
+                 "INDEX 00 00:00:00\r\n" + "INDEX 01 00:00:00\r\n" + "TRACK 02 AUDIO\r\n" +
+                 "TITLE \"Later\"\r\n" + "INDEX 01 01:00:00\r\n");
+  {
+    const auto files = earblaster::parse_cue_sheet(cue);
+    CHECK(files.size() == 1);
+    CHECK(files[0].audio_path == dir + "/audio file.mp3");
+    CHECK(files[0].performer == "The Band");
+    CHECK(files[0].tracks.size() == 2);
+    CHECK(files[0].tracks[0].title == "Bom");
+    CHECK(files[0].tracks[0].start_ns == 0);
+    CHECK(files[0].tracks[1].title == "Later");
+    const gint64 minute = 60LL * 75 * (1000000000LL / 75);
+    CHECK(files[0].tracks[1].start_ns == minute);
+  }
+
+  write_file(cue, std::string("\xEF\xBB\x00") + "FILE \"a.mp3\" MP3\nTRACK 01 AUDIO\nINDEX 01 00:00:00\n");
+  CHECK(earblaster::parse_cue_sheet(cue).empty());
+
   std::remove(cue.c_str());
   rmdir(dir.c_str());
   return suite_test::done("cue");

@@ -107,7 +107,8 @@ std::vector<CueFile> parse_cue_sheet(const std::string& cue_path)
   CueTrack* track = nullptr;
   Glib::ustring sheet_performer;
   std::string line;
-  if (in.peek() == '\xEF') {
+  // peek() returns an int. 0xEF is negative as a char, so a char compare never sees the BOM.
+  if (in.peek() == 0xEF) {
     char bom[3] = {};
     in.read(bom, 3);
     if (!(bom[0] == '\xEF' && bom[1] == '\xBB' && bom[2] == '\xBF'))
