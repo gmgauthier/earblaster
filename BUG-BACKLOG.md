@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`). It checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`) and `tests/test_player.cpp` (`player`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
-
-### Stop then Play drops the CUE chapter range
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/player.cpp:146`, `src/player.cpp:160`, `src/main_window.cpp:589`
-- Trigger: Play a CUE track whose `INDEX 01` is not `00:00:00`. Press Stop, then Play.
-- Outcome: `stop()` sets playbin to `NULL` and does not clear `uri_`. `loaded()` is `!uri_.empty()`, so Play calls `player_.play()`, which only sets `PLAYING`. `pending_clip_seek_` is set in `open()` and is already false. Audio starts at the beginning of the file. `clip_stop_` is still the chapter end, so playback runs from 0 until that absolute time and then skips. Chapter 1 (start 0) happens to sound right.
 
 ### Removing the playing row restarts at row 0
 
@@ -95,6 +87,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Stop then Play drops the CUE chapter range
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/player.cpp` `play`, `stop`
+- Trigger: Play a CUE track whose `INDEX 01` is not `00:00:00`. Press Stop, then Play.
+- Outcome: `stop()` sets playbin to `NULL` and does not clear `uri_`. `loaded()` is `!uri_.empty()`, so Play calls `player_.play()`, which only sets `PLAYING`. `pending_clip_seek_` is set in `open()` and is already false. Audio starts at the beginning of the file. `clip_stop_` is still the chapter end, so playback runs from 0 until that absolute time and then skips. Chapter 1 (start 0) happens to sound right.
+- Fixed in v1.1.3: Stop arms the chapter seek again, and Play from Stopped seeks to that range. Pause leaves the seek where it is.
 
 ### A UTF-8 BOM makes the cue sheet empty
 

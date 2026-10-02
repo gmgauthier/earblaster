@@ -89,3 +89,12 @@ earblaster_tests = executable(
   dependencies: [gtkmm],
 )
 test('cue', earblaster_tests)
+
+player_tests = executable(
+  'earblaster-player-tests',
+  'tests/test_player.cpp',
+  'src/player.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm, gst, gst_tag],
+)
+test('player', player_tests)

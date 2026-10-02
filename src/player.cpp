@@ -81,6 +81,14 @@ Player::Player()
   }
   g_object_set(playbin_, "volume", volume_, nullptr);
 
+  if (const char* sink_name = g_getenv("EARBLASTER_AUDIO_SINK")) {
+    if (GstElement* asink = gst_element_factory_make(sink_name, "earblaster-asink")) {
+      if (g_strcmp0(sink_name, "fakesink") == 0)
+        g_object_set(asink, "sync", FALSE, nullptr);
+      g_object_set(playbin_, "audio-sink", asink, nullptr);
+    }
+  }
+
   eq_ = gst_element_factory_make("equalizer-10bands", "earblaster-eq");
   if (eq_)
     g_object_set(playbin_, "audio-filter", eq_, nullptr);
@@ -147,6 +155,10 @@ void Player::play()
 {
   if (!playbin_ || uri_.empty())
     return;
+  if (state_ == State::Stopped) {
+    pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+    clip_eos_sent_ = false;
+  }
   gst_element_set_state(playbin_, GST_STATE_PLAYING);
 }
 
@@ -164,6 +176,8 @@ void Player::stop()
   stop_position_timer();
   gst_element_set_state(playbin_, GST_STATE_NULL);
   position_ = 0;
+  clip_eos_sent_ = false;
+  pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
   set_state(State::Stopped);
   signal_position_changed_.emit(position_, duration_);
 }
