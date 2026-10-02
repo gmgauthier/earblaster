@@ -147,6 +147,14 @@ std::string resolve_existing_audio(fs::path item)
   return {};
 }
 
+/* Same file spelled differently (relative, `..`, symlinked dir) compares equal. */
+std::string canonical_or_same(const std::string& path)
+{
+  std::error_code ec;
+  const fs::path c = fs::weakly_canonical(fs::absolute(path, ec), ec);
+  return ec ? path : c.string();
+}
+
 }  // namespace
 
 bool Playlist::is_audio_path(const std::string& path)
@@ -550,14 +558,14 @@ int Playlist::add_files(const std::vector<std::string>& paths)
     for (const auto& f : parse_cue_sheet(c)) {
       const std::string a = resolve_existing_audio(fs::path(f.audio_path));
       if (!a.empty())
-        cue_audio.insert(a);
+        cue_audio.insert(canonical_or_same(a));
     }
     n += add_cue(c);
   }
   for (const auto& m : lists)
     n += add_m3u(m);
   for (const auto& p : audio) {
-    if (cue_audio.count(p))
+    if (cue_audio.count(canonical_or_same(p)))
       continue;
     n += add_audio_file(p);
   }

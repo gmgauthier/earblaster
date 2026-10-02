@@ -229,6 +229,42 @@ void test_shuffle_history_skips_removed_row(const Fixture& fx)
   }
 }
 
+void test_cue_plus_its_audio_adds_only_chapters(const Fixture& fx)
+{
+  /* `earblaster album.cue album.wav`: one row per chapter, no extra full-file row.
+   * MainWindow::open_paths hands the whole selection to add_files for this. */
+  const std::string cue = (fx.dir / "album.cue").string();
+  {
+    std::ofstream out(cue);
+    out << "FILE \"track1.wav\" WAVE\n"
+        << "  TRACK 01 AUDIO\n    TITLE \"One\"\n    INDEX 01 00:00:00\n"
+        << "  TRACK 02 AUDIO\n    TITLE \"Two\"\n    INDEX 01 00:00:40\n";
+  }
+  earblaster::Playlist pl;
+  CHECK(pl.add_files({cue, fx.files[0]}) == 2);
+  CHECK(pl.size() == 2);
+  for (int i = 0; i < pl.size(); ++i) {
+    Gtk::TreeModel::Path p;
+    p.push_back(static_cast<unsigned>(i));
+    CHECK(pl.store()->get_iter(p)->get_value(pl.columns().cue));
+  }
+
+  /* Audio first on the command line makes no difference. */
+  earblaster::Playlist rev;
+  CHECK(rev.add_files({fx.files[0], cue}) == 2);
+
+  /* Other files in the same selection are still added. */
+  earblaster::Playlist mix;
+  CHECK(mix.add_files({cue, fx.files[0], fx.files[1]}) == 3);
+
+  /* The audio spelled with a `..` detour is still the claimed file. */
+  earblaster::Playlist detour;
+  const std::string spelled =
+      (fx.dir / ".." / fx.dir.filename() / "track1.wav").string();
+  CHECK(detour.add_files({cue, spelled}) == 2);
+  std::remove(cue.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -245,6 +281,7 @@ int main(int argc, char** argv)
   test_shuffle_history_survives_removal_above(fx);
   test_shuffle_history_survives_reorder(fx);
   test_shuffle_history_skips_removed_row(fx);
+  test_cue_plus_its_audio_adds_only_chapters(fx);
 
   return suite_test::done("playlist");
 }

@@ -6,14 +6,6 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Open
 
-### Opening a CUE plus its audio file adds the full file again
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/main_window.cpp:446`, `src/playlist.cpp:533`
-- Trigger: `earblaster album.cue album.flac`, or File → New File selecting the sheet and the audio together.
-- Outcome: `.cue` paths go through `add_cue` and everything else through `add_files`. The "already claimed by a cue" skip lives only inside `add_files`. The playlist gets one row per chapter and an extra row of the same file from 0 with no stop. That extra row plays the whole album.
-
 ### Save Playlist throws away CUE ranges
 
 - Severity: data-loss
@@ -71,6 +63,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Opening a CUE plus its audio file adds the full file again
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/main_window.cpp:446`, `src/playlist.cpp:533`
+- Trigger: `earblaster album.cue album.flac`, or File → New File selecting the sheet and the audio together.
+- Outcome: `.cue` paths go through `add_cue` and everything else through `add_files`. The "already claimed by a cue" skip lives only inside `add_files`. The playlist gets one row per chapter and an extra row of the same file from 0 with no stop. That extra row plays the whole album.
+- Fixed in v1.1.6: New File and the command line hand the whole selection to `add_files`, which adds cue sheets first and skips audio a sheet already claims. Paths are compared after canonicalising, so a differently spelled path to the same file is skipped too.
 
 ### Shuffle back-history stores raw indexes
 
