@@ -195,6 +195,7 @@ void Playlist::clear()
   store_->clear();
   current_ = Gtk::TreeRowReference();
   history_.clear();
+  successor_ = -1;
 }
 
 int Playlist::size() const
@@ -256,6 +257,7 @@ gint64 Playlist::current_stop_ns() const
 
 void Playlist::set_current(int index)
 {
+  successor_ = -1;
   if (index < 0 || index >= size()) {
     current_ = Gtk::TreeRowReference();
     return;
@@ -268,6 +270,7 @@ void Playlist::set_current(int index)
 
 void Playlist::set_current(const Gtk::TreeModel::Path& path)
 {
+  successor_ = -1;
   if (path.empty()) {
     current_ = Gtk::TreeRowReference();
     return;
@@ -664,6 +667,19 @@ bool Playlist::next()
   if (n <= 0)
     return false;
   const int cur = current_index();
+  if (cur < 0 && successor_ >= 0) {
+    /* The playing row was removed: continue with the row that followed it. */
+    int nxt = successor_;
+    if (nxt >= n) {
+      if (repeat_ != Repeat::All) {
+        successor_ = -1;
+        return false;
+      }
+      nxt = 0;
+    }
+    set_current(nxt);
+    return true;
+  }
   if (shuffle_ && n > 1) {
     if (cur >= 0)
       history_.push_back(cur);
@@ -747,17 +763,27 @@ bool Playlist::remove_paths(const std::vector<Gtk::TreeModel::Path>& paths)
 {
   bool killed_current = false;
   const auto cur = current_path();
+  const int cur_index = current_index();
+  int removed_before = 0;
   auto ordered = paths;
   std::sort(ordered.rbegin(), ordered.rend());
+  ordered.erase(std::unique(ordered.begin(), ordered.end()), ordered.end());
   for (const auto& path : ordered) {
     if (!cur.empty() && path == cur)
       killed_current = true;
+    else if (cur_index >= 0 && !path.empty() && static_cast<int>(path[0]) < cur_index &&
+             store_->get_iter(path))
+      ++removed_before;
     auto it = store_->get_iter(path);
     if (it)
       store_->erase(it);
   }
-  if (killed_current)
+  if (killed_current) {
     current_ = Gtk::TreeRowReference();
+    /* Rows after the removed one keep their order; the first survivor sits
+     * at the old index minus the rows removed above it. */
+    successor_ = cur_index - removed_before;
+  }
   return killed_current;
 }
 

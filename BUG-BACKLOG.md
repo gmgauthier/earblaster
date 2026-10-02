@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`) and `tests/test_player.cpp` (`player`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), and `tests/test_playlist.cpp` (`playlist`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
-
-### Removing the playing row restarts at row 0
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/main_window.cpp:557`, `src/playlist.cpp:677`, `src/playlist.cpp:759`
-- Trigger: Play track 3 of 5 (not shuffled). Delete that row.
-- Outcome: `remove_paths` clears the current row reference. `next()` treats a missing current index as 0, so playback starts at the first remaining row. With shuffle and more than one row left, it picks a random row instead of the successor.
 
 ### Shuffle back-history stores raw indexes
 
@@ -88,6 +80,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Closed
 
+### Removing the playing row restarts at row 0
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/main_window.cpp:557`, `src/playlist.cpp:677`, `src/playlist.cpp:759`
+- Trigger: Play track 3 of 5 (not shuffled). Delete that row.
+- Outcome: `remove_paths` clears the current row reference. `next()` treats a missing current index as 0, so playback starts at the first remaining row. With shuffle and more than one row left, it picks a random row instead of the successor.
+- Fixed in v1.1.4: Removing the playing row remembers the row that followed it. Next (and the auto-advance after the delete) plays that row, with or without shuffle. Removing the last row stops, or wraps to row 0 under Repeat.
+
 ### Stop then Play drops the CUE chapter range
 
 - Severity: incorrect
@@ -105,4 +106,3 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Trigger: A `.cue` whose first bytes are `EF BB BF`, then a valid `FILE` / `TRACK` / `INDEX 01`.
 - Outcome: `ifstream::peek()` returns `int` `0xEF`. `'\xEF'` is a signed char on this ABI, so the comparison is false and the BOM is left in the first line. `FILE` is not recognized. `parse_cue_sheet` returns no tracks, and the sheet is ignored.
 - Fixed in v1.1.2: The leading UTF-8 BOM is recognized as the integer `0xEF` and skipped. A sheet that only starts with `EF BB` and a different third byte is left unchanged.
-
