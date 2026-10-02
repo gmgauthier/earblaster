@@ -109,3 +109,12 @@ playlist_tests = executable(
   dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
 )
 test('playlist', playlist_tests)
+
+settings_tests = executable(
+  'earblaster-settings-tests',
+  'tests/test_settings.cpp',
+  'src/settings.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('settings', settings_tests)

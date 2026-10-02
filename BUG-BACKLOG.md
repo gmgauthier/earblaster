@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), and `tests/test_playlist.cpp` (`playlist`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), and `tests/test_settings.cpp` (`settings`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
-
-### Restored window position ignores negative coordinates
-
-- Severity: incorrect
-- Confidence: high
-- Where: `src/main_window.cpp:120`
-- Trigger: Move the window onto a monitor whose origin is left of or above the primary (`x` or `y` < 0), quit, start again with "Restore window position" on.
-- Outcome: `persist()` saves `get_position` as-is. Restore moves only when both coordinates are `>= 0`. The unset sentinel is also `-1`. Size is restored; position is not. A left-hand panel in a side-by-side layout is a normal way to get `x < 0`.
 
 ### Sync follows a directory symlink and recurses forever
 
@@ -48,6 +40,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 
 ## Closed
 
+### Restored window position ignores negative coordinates
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/main_window.cpp:120`
+- Trigger: Move the window onto a monitor whose origin is left of or above the primary (`x` or `y` < 0), quit, start again with "Restore window position" on.
+- Outcome: `persist()` saves `get_position` as-is. Restore moves only when both coordinates are `>= 0`. The unset sentinel is also `-1`. Size is restored; position is not. A left-hand panel in a side-by-side layout is a normal way to get `x < 0`.
+- Fixed in v1.1.9: Whether a position was saved is its own flag (the `x` and `y` keys are present), so any coordinate, including negative ones, is restored. A config with no saved position does not move the window.
+
 ### Windows absolute FILE paths in a CUE never resolve
 
 - Severity: incorrect
@@ -55,7 +56,7 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Where: `src/cue_sheet.cpp:127`
 - Trigger: A sheet next to `album.flac` whose line is `FILE "D:\Music\Album\album.flac" WAVE`.
 - Outcome: Backslashes become slashes, then a drive letter (`name[1] == ':'`) is stored as absolute with no basename fallback. The path is `D:/Music/Album/album.flac`. On Linux that file is not found and `add_cue` adds nothing. Relative names and backslash-relative names are joined to the sheet directory.
-- Fixed in v1.1.8: A drive-letter (`D:\\...`, `c:/...`) or UNC (`\\\\server\\...`) `FILE` name resolves to its file name in the sheet's directory. POSIX absolute names and relative names (with either slash) are unchanged.
+- Fixed in v1.1.8: A drive-letter (`D:\...`, `c:/...`) or UNC (`\\server\...`) `FILE` name resolves to its file name in the sheet's directory. POSIX absolute names and relative names (with either slash) are unchanged.
 
 ### Save Playlist throws away CUE ranges
 
