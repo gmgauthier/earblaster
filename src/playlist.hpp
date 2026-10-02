@@ -32,6 +32,7 @@ class Playlist {
       add(start_ns);
       add(stop_ns);
       add(cue);
+      add(id);
     }
     Gtk::TreeModelColumn<Glib::RefPtr<Gdk::Pixbuf>> cover;
     Gtk::TreeModelColumn<Glib::ustring> title;
@@ -42,6 +43,8 @@ class Playlist {
     Gtk::TreeModelColumn<gint64> start_ns;
     Gtk::TreeModelColumn<gint64> stop_ns;
     Gtk::TreeModelColumn<bool> cue;
+    /* Stable per-row id; survives deletes above the row and drag reorders. */
+    Gtk::TreeModelColumn<gint64> id;
   };
 
   Playlist();
@@ -108,6 +111,7 @@ class Playlist {
 
  private:
   std::string iter_uri(const Gtk::TreeModel::iterator& it) const;
+  int index_of_id(gint64 id) const;
   int append_uri(const std::string& uri, const Glib::ustring& title, gint64 start_ns = 0,
                  gint64 stop_ns = 0, bool cue = false, const Glib::ustring& artist = {});
   void enqueue_meta(const std::string& uri);
@@ -127,7 +131,8 @@ class Playlist {
   Gtk::TreeRowReference current_;
   bool shuffle_ = false;
   Repeat repeat_ = Repeat::Off;
-  std::vector<int> history_;
+  std::vector<gint64> history_;
+  gint64 next_id_ = 1;
   /* Row that takes over after the playing row is removed; -1 when unset. */
   int successor_ = -1;
   std::mt19937 rng_{std::random_device{}()};
