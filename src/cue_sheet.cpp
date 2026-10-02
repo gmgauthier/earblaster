@@ -126,10 +126,17 @@ std::vector<CueFile> parse_cue_sheet(const std::string& cue_path)
       flush_file(out, cur);
       track = nullptr;
       std::string name = file_name_from_rest(rest);
-      std::replace(name.begin(), name.end(), '\\', '/');
       if (name.empty())
         continue;
-      if (name[0] == '/' || (name.size() > 1 && name[1] == ':'))
+      /* A Windows absolute name (drive letter or UNC share) means nothing on
+       * this machine; the audio normally sits next to the sheet. */
+      const bool drive =
+          name.size() > 1 && name[1] == ':' && std::isalpha(static_cast<unsigned char>(name[0]));
+      const bool unc = name.compare(0, 2, "\\\\") == 0;
+      std::replace(name.begin(), name.end(), '\\', '/');
+      if (drive || unc)
+        cur.audio_path = Glib::build_filename(dir, Glib::path_get_basename(name));
+      else if (name[0] == '/')
         cur.audio_path = name;
       else
         cur.audio_path = Glib::build_filename(dir, name);
