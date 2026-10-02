@@ -1,3 +1,9 @@
+earblaster (1.1.11-1) unstable; urgency=medium
+
+  * Let a failed Sync folder copy be resumed.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 10:48:38 +0100
+
 earblaster (1.1.10-1) unstable; urgency=medium
 
   * Stop the Sync copy from recursing through directory symlinks.
