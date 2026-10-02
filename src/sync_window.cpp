@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: Unlicense */
 
 #include "sync_window.hpp"
+#include "sync_copy.hpp"
 
 #include <glibmm/fileutils.h>
 #include <glibmm/miscutils.h>
@@ -40,68 +41,6 @@ Glib::RefPtr<Gio::File> local_start(const Settings& settings)
   if (Glib::file_test(home_music, Glib::FILE_TEST_IS_DIR))
     return Gio::File::create_for_path(home_music);
   return Gio::File::create_for_path(Glib::get_home_dir());
-}
-
-bool name_skipped(const std::string& name)
-{
-  return name.empty() || name[0] == '.' || name == ".." || name == ".";
-}
-
-/* MTP (and some FUSE backends) omit attributes even when requested.
- * is_hidden() CRITICAL-aborts if standard::is-hidden is missing. */
-bool info_hidden(const Glib::RefPtr<Gio::FileInfo>& info)
-{
-  if (!info || !info->has_attribute("standard::is-hidden"))
-    return false;
-  return info->is_hidden();
-}
-
-bool dir_type(Gio::FileType type)
-{
-  return type == Gio::FILE_TYPE_DIRECTORY || type == Gio::FILE_TYPE_MOUNTABLE;
-}
-
-/* Returns false if dest already has this name (file or folder). Does not merge. */
-bool copy_tree(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::File>& dest_dir,
-               const Glib::RefPtr<Gio::Cancellable>& cancellable,
-               const sigc::slot<void, Glib::ustring>& on_file)
-{
-  if (!src || !dest_dir)
-    return false;
-  if (cancellable && cancellable->is_cancelled())
-    return false;
-  auto info = src->query_info(cancellable, kListAttrs);
-  if (!info)
-    return false;
-  const auto type = info->get_file_type();
-  const std::string name = src->get_basename();
-  if (name_skipped(name))
-    return false;
-  auto dest = dest_dir->get_child(name);
-  if (dest->query_exists(cancellable))
-    return false;
-  if (dir_type(type)) {
-    dest->make_directory(cancellable);
-    auto en = src->enumerate_children(cancellable, kListAttrs);
-    if (!en)
-      return true;
-    while (auto child = en->next_file(cancellable)) {
-      if (cancellable && cancellable->is_cancelled())
-        return true;
-      const std::string child_name = child->get_name();
-      if (name_skipped(child_name) || info_hidden(child))
-        continue;
-      const auto ct = child->get_file_type();
-      if (dir_type(ct) || ct == Gio::FILE_TYPE_REGULAR)
-        copy_tree(src->get_child(child_name), dest, cancellable, on_file);
-    }
-    return true;
-  }
-  if (type != Gio::FILE_TYPE_REGULAR)
-    return false;
-  on_file(Glib::ustring(info->get_display_name().empty() ? name : info->get_display_name()));
-  src->copy(dest, [](goffset, goffset) {}, cancellable, Gio::FILE_COPY_NONE);
-  return true;
 }
 
 }  // namespace
@@ -251,13 +190,13 @@ void SyncPane::refresh()
     }
     while (auto info = en->next_file()) {
       const std::string name = info->get_name();
-      if (name_skipped(name) || info_hidden(info))
+      if (sync_name_skipped(name) || sync_info_hidden(info))
         continue;
       const auto type = info->get_file_type();
-      if (!dir_type(type) && type != Gio::FILE_TYPE_REGULAR)
+      if (!sync_dir_type(type) && type != Gio::FILE_TYPE_REGULAR)
         continue;
       Item it;
-      it.is_dir = dir_type(type);
+      it.is_dir = sync_dir_type(type);
       const std::string display = info->get_display_name();
       it.name = display.empty() ? Glib::ustring(name) : Glib::ustring(display);
       it.size_text =
@@ -548,13 +487,14 @@ void SyncWindow::run_copy()
       }
       try {
         auto src = Gio::File::create_for_uri(uri);
-        const bool copied = copy_tree(src, dest, cancellable_, [this](const Glib::ustring& name) {
-          {
-            std::lock_guard<std::mutex> lock(mu_);
-            progress_text_ = "Copying " + name;
-          }
-          progress_.emit();
-        });
+        const bool copied =
+            sync_copy_tree(src, dest, cancellable_, [this](const Glib::ustring& name) {
+              {
+                std::lock_guard<std::mutex> lock(mu_);
+                progress_text_ = "Copying " + name;
+              }
+              progress_.emit();
+            });
         if (copied) {
           ++ok;
         } else {

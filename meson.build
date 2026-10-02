@@ -1,7 +1,7 @@
 project(
   'earblaster',
   'cpp',
-  version: '1.1.9',
+  version: '1.1.10',
   license: 'Unlicense',
   meson_version: '>=0.56',
   default_options: [
@@ -47,6 +47,7 @@ executable(
   'src/prefs_window.cpp',
   'src/sync_devices.cpp',
   'src/sync_window.cpp',
+  'src/sync_copy.cpp',
   include_directories: inc,
   dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
   install: true,
@@ -118,3 +119,12 @@ settings_tests = executable(
   dependencies: [gtkmm],
 )
 test('settings', settings_tests)
+
+sync_copy_tests = executable(
+  'earblaster-sync-copy-tests',
+  'tests/test_sync_copy.cpp',
+  'src/sync_copy.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm],
+)
+test('sync_copy', sync_copy_tests, timeout: 60)

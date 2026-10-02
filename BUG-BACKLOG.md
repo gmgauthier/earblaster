@@ -2,17 +2,9 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), and `tests/test_settings.cpp` (`settings`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), and `tests/test_sync_copy.cpp` (`sync_copy`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
-
-### Sync follows a directory symlink and recurses forever
-
-- Severity: crash
-- Confidence: high
-- Where: `src/sync_window.cpp:59`, `src/sync_window.cpp:83`
-- Trigger: Transfer a folder that contains a symlink to itself or to an ancestor.
-- Outcome: `dir_type` is true for `FILE_TYPE_DIRECTORY`. Gio's enumerate follows links, so a symlink to a directory is reported as a directory. `copy_tree` has no symlink check and no visited set. It walks the same tree until the stack overflows.
 
 ### A failed folder copy cannot be resumed
 
@@ -39,6 +31,15 @@ Reviewed 2026-10-01 against the 1.1.0 sources.
 - Outcome: The accept handler stops reading at 1 MB and still calls `handle_open_payload`. The sender returns success after a short `write`. `open_paths` clears the playlist first, so the primary replaces the current playlist with a cut-off list. The last line can be a partial path, and nothing retries.
 
 ## Closed
+
+### Sync follows a directory symlink and recurses forever
+
+- Severity: crash
+- Confidence: high
+- Where: `src/sync_window.cpp:59`, `src/sync_window.cpp:83`
+- Trigger: Transfer a folder that contains a symlink to itself or to an ancestor.
+- Outcome: `dir_type` is true for `FILE_TYPE_DIRECTORY`. Gio's enumerate follows links, so a symlink to a directory is reported as a directory. `copy_tree` has no symlink check and no visited set. It walks the same tree until the stack overflows.
+- Fixed in v1.1.10: The folder copy (now `src/sync_copy.cpp`) keeps the `id::file` identity of every folder it is inside and does not walk into a folder that is already on that chain. A link to the folder itself or an ancestor is skipped; a link to a folder elsewhere is still copied.
 
 ### Restored window position ignores negative coordinates
 

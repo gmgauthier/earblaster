@@ -1,6 +1,6 @@
 # EarBlaster backlog
 
-Current release: **v1.1.9**. Last updated: 2026-10-02.
+Current release: **v1.1.10**. Last updated: 2026-10-02.
 
 Windows Media Player 7 (audio). Binary `earblaster`. Suite catalog: `lcos-projects/PRODUCT-BACKLOG.md`. Plan: [DEVELOPMENT.md](DEVELOPMENT.md). How to land work: [DEVELOPMENT.md](DEVELOPMENT.md#process) — `feature/` / `fix/` branches, PRs to `master`, lint gate, semver on shipped PRs.
 
@@ -28,6 +28,8 @@ None.
 - Tag editing in this window. That is a separate guest: media library manager (`lcos-projects/MEDIA-LIBRARY.md`). EarBlaster plays.
 
 ## Shipped
+
+**v1.1.10** — Sync no longer recurses forever through a symlink to a folder or its ancestor.
 
 **v1.1.9** — A window on a monitor left of or above the primary is restored there.
 
