@@ -234,6 +234,17 @@ std::string Playlist::iter_uri(const Gtk::TreeModel::iterator& it) const
   return std::string(it->get_value(columns_.uri));
 }
 
+int Playlist::index_of_id(gint64 id) const
+{
+  int i = 0;
+  for (const auto& row : store_->children()) {
+    if (row.get_value(columns_.id) == id)
+      return i;
+    ++i;
+  }
+  return -1;
+}
+
 std::string Playlist::current_uri() const
 {
   return iter_uri(current_iter());
@@ -293,6 +304,7 @@ int Playlist::append_uri(const std::string& uri, const Glib::ustring& title, gin
   row[columns_.start_ns] = start_ns;
   row[columns_.stop_ns] = stop_ns;
   row[columns_.cue] = cue;
+  row[columns_.id] = next_id_++;
   if (stop_ns > start_ns && start_ns >= 0) {
     row[columns_.duration_ns] = stop_ns - start_ns;
     row[columns_.time] = format_duration(stop_ns - start_ns);
@@ -681,8 +693,8 @@ bool Playlist::next()
     return true;
   }
   if (shuffle_ && n > 1) {
-    if (cur >= 0)
-      history_.push_back(cur);
+    if (auto it = current_iter())
+      history_.push_back(it->get_value(columns_.id));
     std::uniform_int_distribution<int> dist(0, n - 1);
     int pick = dist(rng_);
     if (pick == cur)
@@ -707,12 +719,18 @@ bool Playlist::prev()
   const int n = size();
   if (n <= 0)
     return false;
-  if (shuffle_ && !history_.empty()) {
-    const int idx = history_.back();
-    history_.pop_back();
-    if (idx >= 0 && idx < n) {
-      set_current(idx);
-      return true;
+  if (shuffle_) {
+    /* History holds row ids, so deletes and reorders cannot point it at a
+     * different row. Ids of rows that are gone are skipped. */
+    const int cur_now = current_index();
+    while (!history_.empty()) {
+      const gint64 id = history_.back();
+      history_.pop_back();
+      const int idx = index_of_id(id);
+      if (idx >= 0 && idx != cur_now) {
+        set_current(idx);
+        return true;
+      }
     }
   }
   const int cur = current_index();

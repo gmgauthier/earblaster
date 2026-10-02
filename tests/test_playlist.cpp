@@ -167,6 +167,68 @@ void test_remove_other_row_keeps_current(const Fixture& fx)
   CHECK(pl.current_uri() == track4);
 }
 
+void test_shuffle_history_survives_removal_above(const Fixture& fx)
+{
+  /* Shuffle: remember row 4, delete row 1 above it, Previous returns to the same track. */
+  earblaster::Playlist pl;
+  CHECK(pl.add_files(fx.files) == 5);
+  pl.set_shuffle(true);
+  pl.set_current(3);
+  const std::string remembered = row_uri(pl, 3);
+  CHECK(pl.next());
+  const std::string after = pl.current_uri();
+  CHECK(after != remembered);
+  int del = 0;
+  if (row_uri(pl, del) == after)
+    del = 1;
+  CHECK(!pl.remove_paths(rows({del})));
+  CHECK(pl.prev());
+  CHECK(pl.current_uri() == remembered);
+}
+
+void test_shuffle_history_survives_reorder(const Fixture& fx)
+{
+  /* Shuffle: remember row 2, move it to the top, Previous returns to the same track. */
+  earblaster::Playlist pl;
+  CHECK(pl.add_files(fx.files) == 5);
+  pl.set_shuffle(true);
+  pl.set_current(2);
+  const std::string remembered = row_uri(pl, 2);
+  CHECK(pl.next());
+  Gtk::TreeModel::Path from;
+  from.push_back(2);
+  Gtk::TreeModel::Path top;
+  top.push_back(0);
+  pl.store()->move(pl.store()->get_iter(from), pl.store()->get_iter(top));
+  CHECK(row_uri(pl, 0) == remembered);
+  CHECK(pl.prev());
+  CHECK(pl.current_uri() == remembered);
+}
+
+void test_shuffle_history_skips_removed_row(const Fixture& fx)
+{
+  /* The remembered row itself is deleted: Previous does not land on its stale index. */
+  earblaster::Playlist pl;
+  CHECK(pl.add_files(fx.files) == 5);
+  pl.set_shuffle(true);
+  pl.set_current(4);
+  const std::string remembered = row_uri(pl, 4);
+  CHECK(pl.next());
+  const int cur = pl.current_index();
+  CHECK(!pl.remove_paths(rows({4})));
+  const std::string before = pl.current_uri();
+  const bool moved = pl.prev();
+  CHECK(pl.current_uri() != remembered);
+  /* With no usable history Previous walks back one row from the current one. */
+  if (cur > 0) {
+    CHECK(moved);
+    CHECK(pl.current_index() == cur - 1);
+  } else {
+    CHECK(!moved);
+    CHECK(pl.current_uri() == before);
+  }
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -180,6 +242,9 @@ int main(int argc, char** argv)
   test_remove_playing_row_with_shuffle(fx);
   test_remove_last_playing_row_stops(fx);
   test_remove_other_row_keeps_current(fx);
+  test_shuffle_history_survives_removal_above(fx);
+  test_shuffle_history_survives_reorder(fx);
+  test_shuffle_history_skips_removed_row(fx);
 
   return suite_test::done("playlist");
 }
