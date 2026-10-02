@@ -1,3 +1,9 @@
+earblaster (1.1.2-1) unstable; urgency=medium
+
+  * Skip a UTF-8 BOM at the start of a cue sheet.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Fri, 02 Oct 2026 08:53:34 +0100
+
 earblaster (1.1.1-1) unstable; urgency=medium
 
   * Add a headless meson test suite and record known defects in BUG-BACKLOG.md.
