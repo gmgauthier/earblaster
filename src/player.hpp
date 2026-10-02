@@ -45,6 +45,11 @@ class Player {
   {
     return !uri_.empty();
   }
+  /* True until the next pause seeks to this chapter. Stop arms it again. */
+  bool chapter_seek_pending() const
+  {
+    return pending_clip_seek_;
+  }
   gint64 position() const
   {
     return position_;
