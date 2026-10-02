@@ -98,3 +98,14 @@ player_tests = executable(
   dependencies: [gtkmm, gst, gst_tag],
 )
 test('player', player_tests)
+
+playlist_tests = executable(
+  'earblaster-playlist-tests',
+  'tests/test_playlist.cpp',
+  'src/playlist.cpp',
+  'src/cue_sheet.cpp',
+  'src/cover_art.cpp',
+  include_directories: inc,
+  dependencies: [gtkmm, gst, gst_tag, gst_pbutils, taglib],
+)
+test('playlist', playlist_tests)

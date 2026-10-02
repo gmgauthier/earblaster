@@ -128,6 +128,8 @@ class Playlist {
   bool shuffle_ = false;
   Repeat repeat_ = Repeat::Off;
   std::vector<int> history_;
+  /* Row that takes over after the playing row is removed; -1 when unset. */
+  int successor_ = -1;
   std::mt19937 rng_{std::random_device{}()};
   GstDiscoverer* discoverer_ = nullptr;
   std::deque<std::string> meta_queue_;
