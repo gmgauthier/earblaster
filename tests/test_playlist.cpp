@@ -342,6 +342,31 @@ void test_plain_m3u_still_loads(const Fixture& fx)
   std::remove(m3u.c_str());
 }
 
+void test_dead_m3u_does_not_load_folder(const Fixture& fx)
+{
+  /* The folder has audio. An m3u with nothing playable must stay empty. */
+  const std::string empty_m3u = (fx.dir / "empty.m3u").string();
+  {
+    std::ofstream out(empty_m3u);
+    out << "#EXTM3U\n";
+  }
+  earblaster::Playlist empty;
+  CHECK(empty.add_m3u(empty_m3u) == 0);
+  CHECK(empty.empty());
+
+  const std::string missing = (fx.dir / "missing.m3u").string();
+  {
+    std::ofstream out(missing);
+    out << "no-such-track.flac\n";
+  }
+  earblaster::Playlist gone;
+  CHECK(gone.add_m3u(missing) == 0);
+  CHECK(gone.empty());
+
+  std::remove(empty_m3u.c_str());
+  std::remove(missing.c_str());
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -361,6 +386,7 @@ int main(int argc, char** argv)
   test_cue_plus_its_audio_adds_only_chapters(fx);
   test_save_playlist_keeps_cue_ranges(fx);
   test_plain_m3u_still_loads(fx);
+  test_dead_m3u_does_not_load_folder(fx);
 
   return suite_test::done("playlist");
 }

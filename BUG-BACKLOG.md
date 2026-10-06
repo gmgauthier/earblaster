@@ -2,13 +2,22 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. `playlist` checks that an m3u with no playable entries stays empty instead of loading the folder it sits in. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
 
 None.
 
 ## Closed
+
+### An empty playlist loads its folder
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/playlist.cpp` `add_m3u`, `src/main_window.cpp` `on_new_playlist`
+- Trigger: New Playlist of an m3u whose entries do not resolve, in a folder that contains audio. The file can be empty or only comments.
+- Outcome: `add_m3u` finds nothing playable, then calls `add_folder` on the playlist's directory. New Playlist sees that count and starts playback of the folder.
+- Fixed in v1.1.14: An m3u with no playable entries stays empty. New Playlist reports that and does not start playback.
 
 ### Second-instance socket commits a truncated path list
 
