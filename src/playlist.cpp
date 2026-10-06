@@ -721,8 +721,6 @@ int Playlist::add_m3u(const std::string& path)
     }
     reset_ext();
   }
-  if (n == 0 && !base.empty())
-    n += add_folder(base.string());
   return n;
 }
 
