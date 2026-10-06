@@ -2,13 +2,22 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, that a file with no chapter range stays unarmed, and that a seek while stopped is applied on the next play. `playlist` checks that an m3u with no playable entries stays empty instead of loading the folder it sits in. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, that a file with no chapter range stays unarmed, and that a seek while stopped is applied on the next play. `playlist` checks that an m3u with no playable entries stays empty instead of loading the folder it sits in. `sync_copy` checks that a destination directory symlink is not written through. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
 
 None.
 
 ## Closed
+
+### Sync follows a destination directory symlink
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/sync_copy.cpp` `copy_tree_in` dest type query
+- Trigger: Transfer a folder when the matching name on the destination is a symlink to a directory.
+- Outcome: `FILE_QUERY_INFO_NONE` reports the link as a directory, so the copy merges through it and writes outside the destination tree.
+- Fixed in v1.1.16: the destination type is queried with `NOFOLLOW`. A symlink is treated as an existing item and the children are not written through it. A source symlink to a folder outside the tree is still copied.
 
 ### Seek while stopped does nothing
 

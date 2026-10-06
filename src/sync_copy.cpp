@@ -111,13 +111,17 @@ void copy_tree_in(const Glib::RefPtr<Gio::File>& src, const Glib::RefPtr<Gio::Fi
     const std::string id = folder_id(info);
     if (!id.empty() && std::find(ancestors.begin(), ancestors.end(), id) != ancestors.end())
       return;
-    /* An existing folder is merged so an interrupted copy can be resumed. */
-    if (dest->query_exists(cancellable)) {
-      if (!sync_dir_type(dest->query_file_type(Gio::FILE_QUERY_INFO_NONE, cancellable))) {
-        ++st.existed;
-        return;
-      }
-    } else {
+    /* An existing folder is merged so an interrupted copy can be resumed.
+     * Do not follow a symlink: merging through it writes outside this tree.
+     * A missing name is UNKNOWN and is created; a link, including a dangling
+     * one, is an existing item. */
+    const auto dest_type =
+        dest->query_file_type(Gio::FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, cancellable);
+    if (dest_type != Gio::FILE_TYPE_UNKNOWN && !sync_dir_type(dest_type)) {
+      ++st.existed;
+      return;
+    }
+    if (dest_type == Gio::FILE_TYPE_UNKNOWN) {
       try {
         dest->make_directory(cancellable);
         ++st.folders_created;

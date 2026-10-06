@@ -88,6 +88,38 @@ void test_symlink_loop_terminates()
   CHECK(count_entries(dest) == 4);
 }
 
+void test_destination_directory_symlink_is_not_followed()
+{
+  /* dest/album exists. dest/album/extra is a symlink to a folder outside the
+   * tree that already holds keep.flac. Children of the source extra/ must not
+   * be written through that link. */
+  TempDir t("destlink");
+  const fs::path outside = t.root / "outside";
+  fs::create_directories(outside);
+  write_file(outside / "keep.flac", "keep");
+  const fs::path album = t.root / "src" / "album";
+  fs::create_directories(album / "extra");
+  write_file(album / "01.flac");
+  write_file(album / "extra" / "02.flac");
+  const fs::path dest = t.root / "dest";
+  fs::create_directories(dest / "album");
+  fs::create_directory_symlink(outside, dest / "album" / "extra");
+
+  auto cancel = Gio::Cancellable::create();
+  const auto st =
+      earblaster::sync_copy_tree(gfile(album), gfile(dest), cancel, [](const Glib::ustring&) {});
+  CHECK(st.copied == 1);
+  CHECK(st.existed == 1);
+  CHECK(st.failed == 0);
+  CHECK(fs::is_regular_file(dest / "album" / "01.flac"));
+  CHECK(fs::is_symlink(dest / "album" / "extra"));
+  CHECK(!fs::exists(outside / "02.flac"));
+  std::ifstream in(outside / "keep.flac");
+  std::string body;
+  in >> body;
+  CHECK(body == "keep");
+}
+
 void test_symlink_to_outside_folder_is_copied()
 {
   /* A link to a folder outside the tree (not an ancestor) is still copied. */
@@ -233,6 +265,7 @@ int main()
 {
   Gio::init();
   test_symlink_loop_terminates();
+  test_destination_directory_symlink_is_not_followed();
   test_symlink_to_outside_folder_is_copied();
   test_failed_folder_copy_can_be_resumed();
   test_existing_item_is_reported_as_existing();
