@@ -10,7 +10,7 @@ Third-party software written to live on that desktop: XFCE, XLibre, Clearlooks c
 
 LCOS itself: [https://github.com/BryanLunduke/LCOS](https://github.com/BryanLunduke/LCOS)
 
-Current release: **[1.1.15](https://github.com/gmgauthier/earblaster/releases/tag/v1.1.15)** (2026-10-06).
+Current release: **[1.1.16](https://github.com/gmgauthier/earblaster/releases/tag/v1.1.16)** (2026-10-06).
 
 ## What it is
 
@@ -43,7 +43,7 @@ It borrows LCOS colours. It does **not** use Bryan Lunduke’s official seal. Th
 
 ## Status
 
-**v1.1.15.** A seek while stopped is applied when playback starts. **v1.1.14.** An empty playlist does not load its folder. **v1.1.13.** A second launch with a very long file list no longer replaces the playlist with a cut-off list. **v1.1.12.** Closing the Sync window mid-folder reports the transfer as cancelled, not copied. **v1.1.11.** A Sync folder copy that failed part-way can be resumed with a second Transfer. **v1.1.10.** Sync no longer recurses forever through a symlink to a folder or its ancestor. **v1.1.9.** A window on a monitor left of or above the primary is restored there. **v1.1.8.** A cue sheet whose FILE line is a Windows absolute path finds the audio next to the sheet. **v1.1.7.** Save Playlist keeps CUE chapter ranges, titles, and artists. **v1.1.6.** Opening a cue sheet together with its audio file adds only the chapter rows. **v1.1.5.** Shuffle Previous returns to the same track after rows are deleted or dragged. **v1.1.4.** Removing the playing row continues with the row that followed it. **v1.1.3.** Stop, then Play, seeks back to the CUE chapter. **v1.1.2.** A cue sheet that starts with a UTF-8 BOM still loads its tracks. **v1.1.1.** Playlist cover column and CUE sheet tracks. M0–M6 plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). Headless test suite and BUG-BACKLOG.md. AppImage uses only bundled GStreamer; do not mix with the host.
+**v1.1.16.** A destination directory symlink is not followed. **v1.1.15.** A seek while stopped is applied when playback starts. **v1.1.14.** An empty playlist does not load its folder. **v1.1.13.** A second launch with a very long file list no longer replaces the playlist with a cut-off list. **v1.1.12.** Closing the Sync window mid-folder reports the transfer as cancelled, not copied. **v1.1.11.** A Sync folder copy that failed part-way can be resumed with a second Transfer. **v1.1.10.** Sync no longer recurses forever through a symlink to a folder or its ancestor. **v1.1.9.** A window on a monitor left of or above the primary is restored there. **v1.1.8.** A cue sheet whose FILE line is a Windows absolute path finds the audio next to the sheet. **v1.1.7.** Save Playlist keeps CUE chapter ranges, titles, and artists. **v1.1.6.** Opening a cue sheet together with its audio file adds only the chapter rows. **v1.1.5.** Shuffle Previous returns to the same track after rows are deleted or dragged. **v1.1.4.** Removing the playing row continues with the row that followed it. **v1.1.3.** Stop, then Play, seeks back to the CUE chapter. **v1.1.2.** A cue sheet that starts with a UTF-8 BOM still loads its tracks. **v1.1.1.** Playlist cover column and CUE sheet tracks. M0–M6 plus **v1.0.0** offline device sync ([SYNC.md](SYNC.md)). Headless test suite and BUG-BACKLOG.md. AppImage uses only bundled GStreamer; do not mix with the host.
 
 | File | What |
 |---|---|
@@ -60,7 +60,7 @@ Not in this release (parked in DEVELOPMENT.md / BACKLOG.md): spectrum ring, MPRI
 Preferred on LCOS / Devuan / Debian — a release `.deb`:
 
 ```
-sudo apt install ./earblaster_1.1.15-1_amd64.deb
+sudo apt install ./earblaster_1.1.16-1_amd64.deb
 ```
 
 Assets live on the [Releases](https://github.com/gmgauthier/earblaster/releases) page. AppImage and source tarball are documented in [INSTALL.md](INSTALL.md). Config is `~/.config/earblaster/earblaster.ini`.
@@ -72,14 +72,14 @@ The AppImage **bundles** libgstreamer and plugins from the Debian build host. On
 **Normal run** — the AppImage runtime sets `APPDIR` for you:
 
 ```
-chmod +x EarBlaster-1.1.15-x86_64.AppImage
-./EarBlaster-1.1.15-x86_64.AppImage
+chmod +x EarBlaster-1.1.16-x86_64.AppImage
+./EarBlaster-1.1.16-x86_64.AppImage
 ```
 
 **Extracted tree** — if you unpack it (`--appimage-extract`), you must set `APPDIR` to that tree or GStreamer will use the host and you can hit the same mismatch:
 
 ```
-./EarBlaster-1.1.15-x86_64.AppImage --appimage-extract
+./EarBlaster-1.1.16-x86_64.AppImage --appimage-extract
 export APPDIR="$PWD/squashfs-root"
 "$APPDIR/AppRun"
 # or: "$APPDIR/usr/bin/earblaster"
