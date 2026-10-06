@@ -2,13 +2,22 @@
 
 Reviewed 2026-10-01 against the 1.1.0 sources.
 
-`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, and that a file with no chapter range stays unarmed. `playlist` checks that an m3u with no playable entries stays empty instead of loading the folder it sits in. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
+`meson test` runs `tests/test_cue.cpp` (`cue`), `tests/test_player.cpp` (`player`), `tests/test_playlist.cpp` (`playlist`), `tests/test_settings.cpp` (`settings`), `tests/test_sync_copy.cpp` (`sync_copy`), and `tests/test_open_payload.cpp` (`open_payload`). `cue` checks quoted relative `FILE` lines, `INDEX 00` dropped, `INDEX 01` frame math within 1 ms, absolute paths, and a UTF-8 BOM in front of a sheet. `player` checks that Stop arms the chapter seek again, that Pause does not, that a file with no chapter range stays unarmed, and that a seek while stopped is applied on the next play. `playlist` checks that an m3u with no playable entries stays empty instead of loading the folder it sits in. The player test sets `EARBLASTER_AUDIO_SINK=fakesink`. Nothing in `src/` shells out.
 
 ## Open
 
 None.
 
 ## Closed
+
+### Seek while stopped does nothing
+
+- Severity: incorrect
+- Confidence: high
+- Where: `src/player.cpp` `seek`, `stop`
+- Trigger: Play a file, press Stop, drag the seek bar or press Left or Right, then press Play.
+- Outcome: Stop leaves playbin in NULL and keeps the duration, so the seek bar stays enabled. A seek on a NULL pipeline does not move. Play starts again at the beginning. The same for a chapter: Play jumps back to the chapter start.
+- Fixed in v1.1.15: A seek while stopped is remembered, the clock shows it, and it is applied when playback prerolls. A chapter still ends at its stop time. Stop, then Play, without a new seek still starts at the chapter.
 
 ### An empty playlist loads its folder
 

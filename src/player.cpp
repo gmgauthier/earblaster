@@ -131,6 +131,7 @@ bool Player::open(const std::string& path_or_uri, gint64 start_ns, gint64 stop_n
   clip_start_ = start_ns > 0 ? start_ns : 0;
   clip_stop_ = (stop_ns > clip_start_) ? stop_ns : 0;
   pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+  pending_user_seek_ = -1;
   clip_eos_sent_ = false;
   g_object_set(playbin_, "uri", uri_.c_str(), "volume", volume_, nullptr);
   return true;
@@ -156,7 +157,11 @@ void Player::play()
   if (!playbin_ || uri_.empty())
     return;
   if (state_ == State::Stopped) {
-    pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+    /* A seek made while stopped replaces the chapter-start seek. */
+    if (pending_user_seek_ < 0)
+      pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+    else
+      pending_clip_seek_ = false;
     clip_eos_sent_ = false;
   }
   gst_element_set_state(playbin_, GST_STATE_PLAYING);
@@ -178,20 +183,51 @@ void Player::stop()
   position_ = 0;
   clip_eos_sent_ = false;
   pending_clip_seek_ = clip_start_ > 0 || clip_stop_ > 0;
+  pending_user_seek_ = -1;
   set_state(State::Stopped);
   signal_position_changed_.emit(position_, duration_);
+}
+
+void Player::apply_user_seek()
+{
+  if (!playbin_ || pending_user_seek_ < 0)
+    return;
+  const gint64 abs = pending_user_seek_;
+  pending_user_seek_ = -1;
+  const GstSeekFlags flags =
+      static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE);
+  gboolean ok = FALSE;
+  if (clip_stop_ > clip_start_) {
+    ok = gst_element_seek(playbin_, 1.0, GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, abs,
+                          GST_SEEK_TYPE_SET, clip_stop_);
+  } else {
+    ok = gst_element_seek_simple(playbin_, GST_FORMAT_TIME, flags, abs);
+  }
+  /* A NULL pipeline rejects the seek. Leave it pending until preroll. */
+  if (!ok) {
+    pending_user_seek_ = abs;
+    return;
+  }
+  position_ = abs - clip_start_;
 }
 
 void Player::seek(gint64 ns)
 {
   if (!playbin_ || uri_.empty() || ns < 0)
     return;
+  if (duration_ > 0 && ns > duration_)
+    ns = duration_;
   gint64 abs = clip_start_ + ns;
   if (clip_stop_ > clip_start_ && abs > clip_stop_)
     abs = clip_stop_;
-  gst_element_seek_simple(playbin_, GST_FORMAT_TIME,
-                          static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE),
-                          abs);
+  if (state_ == State::Stopped) {
+    pending_user_seek_ = abs;
+    position_ = abs - clip_start_;
+    signal_position_changed_.emit(position_, duration_);
+    return;
+  }
+  pending_user_seek_ = abs;
+  apply_user_seek();
 }
 
 void Player::set_volume(double volume)
@@ -321,6 +357,8 @@ gboolean Player::on_bus(GstBus*, GstMessage* msg, gpointer self)
         p->set_state(State::Stopped);
       if (new_st == GST_STATE_PAUSED && p->pending_clip_seek_)
         p->apply_clip_seek();
+      if ((new_st == GST_STATE_PAUSED || new_st == GST_STATE_PLAYING) && p->pending_user_seek_ >= 0)
+        p->apply_user_seek();
       if (new_st == GST_STATE_PLAYING || new_st == GST_STATE_PAUSED)
         p->query_position();
       break;

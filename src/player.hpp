@@ -50,6 +50,11 @@ class Player {
   {
     return pending_clip_seek_;
   }
+  /* True until playback prerolls and applies a seek made while stopped. */
+  bool user_seek_pending() const
+  {
+    return pending_user_seek_ >= 0;
+  }
   gint64 position() const
   {
     return position_;
@@ -94,6 +99,7 @@ class Player {
   void query_position();
   void handle_tags(GstTagList* tags);
   void apply_clip_seek();
+  void apply_user_seek();
 
   GstElement* playbin_ = nullptr;
   GstElement* eq_ = nullptr;
@@ -107,6 +113,8 @@ class Player {
   gint64 clip_start_ = 0;
   gint64 clip_stop_ = 0;
   bool pending_clip_seek_ = false;
+  /* Absolute pipeline time for a seek made while stopped, or -1. */
+  gint64 pending_user_seek_ = -1;
   bool clip_eos_sent_ = false;
   double volume_ = 0.8;
 

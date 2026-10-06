@@ -62,6 +62,23 @@ bool pump_until(const earblaster::Player& player, bool want_pending, earblaster:
   return false;
 }
 
+bool pump_user_seek(const earblaster::Player& player)
+{
+  for (int i = 0; i < 400; ++i) {
+    g_main_context_iteration(nullptr, false);
+    if (!player.user_seek_pending() && player.state() == earblaster::Player::State::Playing)
+      return true;
+    g_usleep(10 * 1000);
+  }
+  return false;
+}
+
+bool near_pos(gint64 got, gint64 want)
+{
+  const gint64 slack = 80 * GST_MSECOND;
+  return got + slack >= want && got <= want + slack;
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -104,6 +121,60 @@ int main(int argc, char** argv)
     player.stop();
     CHECK(player.state() == earblaster::Player::State::Stopped);
     CHECK(!player.chapter_seek_pending());
+  }
+
+  /* Stop leaves the pipeline NULL. A seek is kept and applied on the next play. */
+  {
+    earblaster::Player player;
+    CHECK(player.open(wav, 0, 0));
+    player.play();
+    CHECK(pump_until(player, false, earblaster::Player::State::Playing));
+    for (int i = 0; i < 20; ++i)
+      g_main_context_iteration(nullptr, false);
+    CHECK(player.duration() > 0);
+    const gint64 duration = player.duration();
+    player.stop();
+    CHECK(player.state() == earblaster::Player::State::Stopped);
+    CHECK(player.duration() == duration);
+    CHECK(player.position() == 0);
+    const gint64 target = GST_SECOND / 2;
+    player.seek(target);
+    CHECK(player.user_seek_pending());
+    CHECK(player.position() == target);
+    gint64 landed = -1;
+    player.signal_position_changed().connect([&](gint64 pos, gint64) {
+      if (landed < 0 && !player.user_seek_pending())
+        landed = pos;
+    });
+    player.play();
+    CHECK(pump_user_seek(player));
+    CHECK(near_pos(landed, target));
+    player.stop();
+    CHECK(!player.user_seek_pending());
+    CHECK(player.position() == 0);
+  }
+
+  /* A seek while stopped on a chapter starts there, not at the chapter start. */
+  {
+    earblaster::Player player;
+    CHECK(player.open(wav, start, stop));
+    player.play();
+    CHECK(pump_until(player, false, earblaster::Player::State::Playing));
+    player.stop();
+    CHECK(player.chapter_seek_pending());
+    const gint64 into = GST_SECOND / 10;
+    player.seek(into);
+    CHECK(player.position() == into);
+    gint64 landed = -1;
+    player.signal_position_changed().connect([&](gint64 pos, gint64) {
+      if (landed < 0 && !player.user_seek_pending())
+        landed = pos;
+    });
+    player.play();
+    CHECK(pump_user_seek(player));
+    CHECK(!player.chapter_seek_pending());
+    CHECK(near_pos(landed, into));
+    player.stop();
   }
 
   std::remove(wav.c_str());
