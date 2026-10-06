@@ -1,3 +1,9 @@
+earblaster (1.1.15-1) unstable; urgency=medium
+
+  * A seek while stopped is applied when playback starts.
+
+ -- Greg Gauthier <gmgauthier@protonmail.com>  Tue, 06 Oct 2026 23:31:38 +0100
+
 earblaster (1.1.14-1) unstable; urgency=medium
 
   * An empty playlist does not load its folder.
